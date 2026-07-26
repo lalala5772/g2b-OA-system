@@ -11,7 +11,7 @@ export default function FeatureCard({ to, title, description, badge }: FeatureCa
   return (
     <Link
       to={to}
-      className="group relative flex flex-col justify-between rounded-lg border border-hairline bg-navy-900 p-8 transition-transform duration-200 hover:scale-[1.02]"
+      className="btn-premium group relative flex flex-col justify-between rounded-lg border border-hairline bg-navy-900 p-8 hover:border-accent"
     >
       {badge && (
         <span className="absolute right-6 top-6 rounded-full bg-accent-soft px-3 py-1 text-xs text-accent">

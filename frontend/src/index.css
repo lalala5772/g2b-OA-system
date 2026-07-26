@@ -37,3 +37,53 @@ body {
 ::selection {
   background: var(--color-accent-soft);
 }
+
+/*
+ * Premium press/hover treatment for primary pill CTAs: a lift + soft glow on
+ * hover, a diagonal sheen sweep, and a tactile scale-down on press.
+ */
+.btn-premium {
+  position: relative;
+  overflow: hidden;
+  transition:
+    transform 180ms ease,
+    box-shadow 220ms ease,
+    border-color 220ms ease,
+    color 220ms ease;
+}
+.btn-premium::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.14) 50%, transparent 70%);
+  transform: translateX(-130%);
+  transition: transform 650ms ease;
+  pointer-events: none;
+}
+.btn-premium:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 10px 30px -14px rgba(216, 200, 168, 0.45);
+}
+.btn-premium:hover::before {
+  transform: translateX(130%);
+}
+.btn-premium:active {
+  transform: translateY(0) scale(0.96);
+  box-shadow: 0 4px 14px -10px rgba(216, 200, 168, 0.3);
+  transition-duration: 90ms;
+}
+.btn-premium:disabled {
+  transform: none;
+  box-shadow: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .btn-premium,
+  .btn-premium::before {
+    transition-duration: 1ms;
+  }
+  .btn-premium:hover,
+  .btn-premium:active {
+    transform: none;
+  }
+}

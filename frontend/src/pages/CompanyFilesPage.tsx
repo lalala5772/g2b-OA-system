@@ -82,7 +82,7 @@ export default function CompanyFilesPage() {
             <>
               <div className="flex items-center gap-2">
                 <p className="text-sm text-offwhite">
-                  <span className="text-accent">{CATEGORY_LABELS[activeCategory]}</span> 카테고리에 업로드
+                  <span className="text-accent">{CATEGORY_LABELS[activeCategory]}</span>
                 </p>
                 {isUploading && <span className="text-xs text-muted">업로드 중…</span>}
               </div>

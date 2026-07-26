@@ -13,7 +13,7 @@ export default function DashboardPage() {
     <div>
       <p className="text-xs font-medium tracking-[0.4em] text-muted">DASHBOARD</p>
       <h1 className="mt-4 text-4xl font-semibold tracking-tight text-offwhite">
-        오늘의 업무 현황
+        메인화면
       </h1>
 
       <div className="mt-10 grid gap-5 md:grid-cols-3">

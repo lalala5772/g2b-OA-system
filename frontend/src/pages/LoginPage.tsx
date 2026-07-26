@@ -1,14 +1,16 @@
 import { googleLoginUrl } from '../api/auth'
+import RadarField from '../components/RadarField'
 
 export default function LoginPage() {
   return (
     <div className="relative flex min-h-screen flex-col items-center overflow-hidden bg-navy-950 px-6 pb-16 pt-36 text-center md:pt-44">
+      <RadarField />
       <div
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 60% 50% at 50% 0%, rgba(216,200,168,0.10), transparent 65%), ' +
-            'radial-gradient(ellipse 70% 60% at 85% 100%, rgba(58,51,39,0.55), transparent 60%)',
+            'radial-gradient(ellipse 55% 45% at 30% 15%, rgba(23,20,15,0.7), transparent 60%), ' +
+            'radial-gradient(ellipse 70% 60% at 85% 100%, rgba(58,51,39,0.6), transparent 60%)',
         }}
       />
 
@@ -35,7 +37,7 @@ export default function LoginPage() {
 
       <a
         href={googleLoginUrl()}
-        className="relative mt-14 rounded-full border border-hairline bg-navy-900/70 px-9 py-3.5 text-sm tracking-wide text-offwhite backdrop-blur transition-colors hover:border-accent hover:text-accent"
+        className="btn-premium relative mt-14 rounded-full border border-hairline bg-navy-900/70 px-9 py-3.5 text-sm tracking-wide text-offwhite backdrop-blur hover:border-accent hover:text-accent"
       >
         Sign in with Google
       </a>
