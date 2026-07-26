@@ -9,5 +9,10 @@ public interface FileStorageService {
 	 */
 	String store(MultipartFile file);
 
+	/** Same as {@link #store(MultipartFile)} but for bytes generated in-process (e.g. a filled document). */
+	String store(byte[] content, String suggestedFilename);
+
+	byte[] load(String storageKey);
+
 	void delete(String storageKey);
 }

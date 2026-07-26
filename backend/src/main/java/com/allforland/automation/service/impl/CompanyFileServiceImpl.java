@@ -10,6 +10,7 @@ import com.allforland.automation.repository.CompanyFileRepository;
 import com.allforland.automation.service.CompanyFileService;
 import com.allforland.automation.service.FileStorageService;
 import com.allforland.automation.service.UserService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.IOException;
 import java.util.List;
 import org.springframework.stereotype.Service;
@@ -24,16 +25,19 @@ public class CompanyFileServiceImpl implements CompanyFileService {
 	private final UserService userService;
 	private final FileStorageService fileStorageService;
 	private final AiEngineClient aiEngineClient;
+	private final ObjectMapper objectMapper;
 
 	public CompanyFileServiceImpl(
 			CompanyFileRepository companyFileRepository,
 			UserService userService,
 			FileStorageService fileStorageService,
-			AiEngineClient aiEngineClient) {
+			AiEngineClient aiEngineClient,
+			ObjectMapper objectMapper) {
 		this.companyFileRepository = companyFileRepository;
 		this.userService = userService;
 		this.fileStorageService = fileStorageService;
 		this.aiEngineClient = aiEngineClient;
+		this.objectMapper = objectMapper;
 	}
 
 	@Override
@@ -58,6 +62,9 @@ public class CompanyFileServiceImpl implements CompanyFileService {
 			FileParseResult result = aiEngineClient.parseFile(file.getBytes(), file.getOriginalFilename());
 			if (result.success()) {
 				companyFile.markParsed(result.extractedText());
+				if (category == FileCategory.EVIDENCE) {
+					embedForMatching(companyFile);
+				}
 			} else {
 				companyFile.markParseFailed();
 			}
@@ -66,6 +73,19 @@ public class CompanyFileServiceImpl implements CompanyFileService {
 		}
 
 		return CompanyFileResponse.from(companyFile);
+	}
+
+	/** Evidence files get embedded at upload time so Phase 5 matching never recomputes it. */
+	private void embedForMatching(CompanyFile companyFile) {
+		List<Double> vector = aiEngineClient.embed(companyFile.getExtractedText());
+		if (vector.isEmpty()) {
+			return;
+		}
+		try {
+			companyFile.setEmbedding(objectMapper.writeValueAsString(vector));
+		} catch (Exception ignored) {
+			// leave embedding null — the item just won't be matchable until re-uploaded
+		}
 	}
 
 	@Override

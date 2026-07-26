@@ -1,6 +1,6 @@
 from fastapi import FastAPI
 
-from app.routers import files
+from app.routers import bids, documents, embeddings, evidence, files, ideas
 
 app = FastAPI(
     title="g2b-oa-ai-engine",
@@ -9,6 +9,11 @@ app = FastAPI(
 )
 
 app.include_router(files.router)
+app.include_router(bids.router)
+app.include_router(documents.router)
+app.include_router(ideas.router)
+app.include_router(evidence.router)
+app.include_router(embeddings.router)
 
 
 @app.get("/health")

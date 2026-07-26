@@ -35,11 +35,22 @@ app:
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:720}
   file-storage:
     base-dir: ${FILE_STORAGE_BASE_DIR:./data/company-files}
+  bid:
+    scan-cron: ${BID_SCAN_CRON:0 0 9 * * *}
+    keywords-seed: ${BID_KEYWORDS_SEED:}
+    eligibility-threshold: ${BID_ELIGIBILITY_THRESHOLD:0.6}
+  evidence:
+    match-threshold: ${EVIDENCE_MATCH_THRESHOLD:0.5}
 
 ai-engine:
   base-url: ${AI_ENGINE_BASE_URL:http://127.0.0.1:8000}
   api-key: ${AI_ENGINE_API_KEY:not-configured}
   timeout-seconds: ${AI_ENGINE_TIMEOUT_SECONDS:30}
+  long-timeout-seconds: ${AI_ENGINE_LONG_TIMEOUT_SECONDS:120}
+
+# Label only (e.g. ContestIdea.llmModel) — the actual Claude API key lives in ai-engine/.env, not here.
+claude:
+  model: ${CLAUDE_MODEL:claude-sonnet-5}
 
 logging:
   level:

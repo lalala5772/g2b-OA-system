@@ -31,7 +31,7 @@ public class LocalFileStorageService implements FileStorageService {
 	@Override
 	public String store(MultipartFile file) {
 		String extension = StringUtils.getFilenameExtension(file.getOriginalFilename());
-		String storageKey = UUID.randomUUID() + (extension != null ? "." + extension : "");
+		String storageKey = newStorageKey(extension);
 		Path target = baseDir.resolve(storageKey);
 		try {
 			file.transferTo(target);
@@ -42,11 +42,36 @@ public class LocalFileStorageService implements FileStorageService {
 	}
 
 	@Override
+	public String store(byte[] content, String suggestedFilename) {
+		String extension = StringUtils.getFilenameExtension(suggestedFilename);
+		String storageKey = newStorageKey(extension);
+		try {
+			Files.write(baseDir.resolve(storageKey), content);
+		} catch (IOException e) {
+			throw new IllegalStateException("파일 저장에 실패했습니다.", e);
+		}
+		return storageKey;
+	}
+
+	@Override
+	public byte[] load(String storageKey) {
+		try {
+			return Files.readAllBytes(baseDir.resolve(storageKey));
+		} catch (IOException e) {
+			throw new IllegalStateException("파일을 읽을 수 없습니다: " + storageKey, e);
+		}
+	}
+
+	@Override
 	public void delete(String storageKey) {
 		try {
 			Files.deleteIfExists(baseDir.resolve(storageKey));
 		} catch (IOException e) {
 			throw new IllegalStateException("파일 삭제에 실패했습니다.", e);
 		}
+	}
+
+	private String newStorageKey(String extension) {
+		return UUID.randomUUID() + (extension != null ? "." + extension : "");
 	}
 }

@@ -9,7 +9,6 @@ import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
-import jakarta.persistence.Lob;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.Table;
 import java.time.Instant;
@@ -44,13 +43,16 @@ public class CompanyFile {
 	@Column(name = "storage_key", nullable = false)
 	private String storageKey;
 
-	@Lob
-	@Column(name = "extracted_text")
+	@Column(name = "extracted_text", columnDefinition = "TEXT")
 	private String extractedText;
 
 	@Enumerated(EnumType.STRING)
 	@Column(name = "parse_status", nullable = false)
 	private ParseStatus parseStatus = ParseStatus.PENDING;
+
+	/** JSON-encoded float array, populated only for category=EVIDENCE. Used for cosine-similarity matching (Phase 5). */
+	@Column(name = "embedding", columnDefinition = "TEXT")
+	private String embedding;
 
 	@Column(name = "uploaded_at", nullable = false)
 	private Instant uploadedAt;
@@ -72,5 +74,9 @@ public class CompanyFile {
 
 	public void markParseFailed() {
 		this.parseStatus = ParseStatus.FAILED;
+	}
+
+	public void setEmbedding(String embedding) {
+		this.embedding = embedding;
 	}
 }

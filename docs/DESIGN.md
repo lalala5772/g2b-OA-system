@@ -1,6 +1,6 @@
 # 업무 자동화 플랫폼 설계서
 
-> 이 문서는 프로젝트 초기 설계를 기록한 것입니다. 실제 구현은 [`../README.md`](../README.md)의 Phase 로드맵을 따라 단계적으로 진행되며, 구현 과정에서 반영된 보정 사항은 맨 아래 [Phase 1 구현 시 반영한 피드백](#phase-1-구현-시-반영한-피드백) 절을 참고하세요.
+> 이 문서는 프로젝트 초기 설계를 기록한 것입니다. 실제 구현은 [`../README.md`](../README.md)의 Phase 로드맵을 따라 단계적으로 진행되며, 구현 과정에서 반영된 보정 사항은 맨 아래 [Phase 1 구현 시 반영한 피드백](#phase-1-구현-시-반영한-피드백)과 [Phase 2~5 구현 시 반영한 피드백](#phase-25-구현-시-반영한-피드백) 절을 참고하세요.
 
 ---
 ## 0. 기술 스택 제안 (결론부터)
@@ -308,7 +308,7 @@ erDiagram
 ```
 > 사용자 입력이 "공모전 파일 1개"로 단순화됩니다. 자료실에 회사 자료가 하나도 없으면 React가 "먼저 자료실에 회사 소개자료를 등록해주세요" 안내와 함께 자료실 페이지로 유도합니다.
 
-> Phase 1 범위 아님: 화면 골격만 존재, API는 `{status: "not_implemented"}`를 반환합니다.
+> **Phase 4에서 구현 완료.** 흐름은 위와 동일합니다. `IDEA_REQUEST_COMPANY_FILES` 스냅샷까지 그대로 구현했습니다.
 
 ### 2) 문서 자동 채우기 (Word 양식 전용, 회사 고정정보는 자료실에서 자동 채움)
 ```
@@ -328,7 +328,7 @@ erDiagram
 ```
 > 다른 포맷(한글/PDF)은 "양식"으로 직접 채워 넣기엔 구조상 까다로워, 자동 채우기는 Word 양식만 지원하는 것으로 범위를 명확히 좁혔습니다. (한글 양식이 꼭 필요하면 이후 별도 과제로 확장)
 
-> Phase 1 범위 아님: 화면 골격만 존재, API는 `{status: "not_implemented"}`를 반환합니다.
+> **Phase 3에서 구현 완료.** S3 대신 로컬 스토리지를 사용하는 것 외에는 흐름 동일. LLM 자동추출이 실패해도 해당 필드만 빈 채로 남기고 전체 요청은 실패시키지 않습니다.
 
 ### 3) 공모전/정부사업 요건 파일 → 자료실 증빙자료 자동 매칭 & ZIP 생성
 ```
@@ -354,23 +354,23 @@ erDiagram
          (필요 시 이 화면에서 바로 "자료실에 업로드하기" 버튼으로 0-3 페이지로 이동해 보완 가능)
 ```
 
-> Phase 1 범위 아님: 화면 골격만 존재, API는 `{status: "not_implemented"}`를 반환합니다.
+> **Phase 5에서 구현 완료 — 단, 벡터 인덱스는 pgvector/FAISS가 아니라 단순 코사인 유사도로 구현.** 임베딩도 Claude API가 아니라 로컬 sentence-transformers 사용. zip 압축은 Spring이 직접 담당(파일이 이미 Spring 쪽 로컬 스토리지에 있으므로). 상세 이유는 문서 하단 참고.
 
-### 4) 나라장터 자동화 → Google Chat 알림 (기존 경험 재사용/고도화)
+### 4) 나라장터 자동화 → Slack 알림 (기존 경험 재사용/고도화)
 ```
 [스케줄러] Spring @Scheduled(cron="매일 지정 시각")
    → FastAPI POST /bids/scan 트리거
    → FastAPI:
-       1. BID_KEYWORDS 조회 (13개 키워드 등)
-       2. ThreadPoolExecutor로 나라장터 Open API 병렬 조회 (기존 경험 그대로)
-       3. 신규 공고만 필터링 → Claude API로 적격 여부/점수 병렬 판단
+       1. BID_KEYWORDS 조회 (Spring이 활성 키워드만 전달)
+       2. 나라장터 Open API 조회 후 키워드로 제목 필터링
+       3. 신규 공고만 필터링 → Claude API로 적격 여부/점수를 ThreadPoolExecutor로 병렬 판단
           (rate limit 고려해 동시 실행 수 제한 - 기존 경험 그대로)
-       4. 기준 점수 이상 → Google Chat Webhook으로 알림 전송
-       5. 결과 BID_NOTICES/NOTIFICATION_LOGS에 저장
+       4. 기준 점수 이상 → Slack Webhook으로 알림 전송
+       5. 결과를 Spring에 반환 → Spring이 BID_NOTICES/NOTIFICATION_LOGS에 저장(외부공고번호로 중복 방지)
    → Spring: 결과 집계 → React 대시보드에 "오늘 감지된 공고" 표시
 ```
 
-> Phase 1 범위 아님: 화면 골격만 존재, API는 `{status: "not_implemented"}`를 반환합니다.
+> **Phase 2에서 구현 완료.** 나라장터 API가 키워드 기반 검색이 아니라 날짜범위 목록 조회 방식이라, "키워드별 병렬 조회" 대신 "목록 조회 1회 + 제목 키워드 매칭 후 Claude 판단만 병렬화"로 조정했습니다. 알림 채널은 Google Chat 대신 Slack.
 
 ---
 ## 5. 기능 구현 상세
@@ -399,15 +399,15 @@ ai_engine/
  │    │     ├─ docx_parser.py   (python-docx)
  │    │     ├─ pdf_parser.py    (pdfplumber / PyMuPDF)
  │    │     └─ hwp_parser.py    (pyhwp / hwpx 자체 파서)
- │    ├─ llm_client.py          (Claude API 래퍼, 재시도/타임아웃)
- │    ├─ embedding_service.py   (pgvector/FAISS)
+ │    ├─ llm_client.py          (Claude API 래퍼, JSON 파싱까지 포함)
+ │    ├─ embedding_service.py   (로컬 sentence-transformers — pgvector/FAISS 아님, 아래 Phase 2~5 절 참고)
  │    ├─ docx_filler.py         (python-docx, Word 양식 채움)
- │    ├─ requirement_extractor.py (LLM으로 공고문→제출서류 목록 추출)
- │    ├─ zip_builder.py         (zipfile, 매칭 evidence 압축)
+ │    ├─ requirement_extractor.py (evidence.py 라우터 안에 통합 — 별도 파일로 분리하지 않음)
  │    ├─ bid_scanner.py         (기존 나라장터 로직 이식)
- │    └─ chat_notifier.py       (Google Chat Webhook)
- └─ core/config.py, s3.py
+ │    └─ slack_notifier.py      (Slack Incoming Webhook)
+ └─ core/config.py
 ```
+> zip 압축은 FastAPI가 아니라 Spring이 담당합니다(파일이 이미 Spring 로컬 스토리지에 있어 왕복 전송이 불필요하므로) — 별도 `zip_builder.py`는 없습니다. `core/s3.py`도 아직 S3를 쓰지 않아 없습니다.
 
 ### 5.3 인증/보안
 - **Spring Security OAuth2 Client (Google) 전용 로그인** — 자체 회원가입/비밀번호 로그인 폼 없음
@@ -416,7 +416,7 @@ ai_engine/
 - 로그인 성공 후 Spring이 자체 세션 JWT를 발급해 React가 이후 API 호출에 사용(Google 액세스 토큰을 그대로 프론트에 노출하지 않음) — **Phase 1 구현에서는 httpOnly 쿠키로 전달**(위 0-1 보정 참고)
 - FastAPI는 Spring에서만 호출되는 내부 서버 → API Key 헤더 정도의 최소 인증만 추가
 - S3 접근은 IAM Role(EC2 Instance Profile)로 처리, 액세스키 하드코딩 금지
-- Google OAuth Client ID/Secret, Claude API Key, Google Chat Webhook URL은 `.env` + Spring `application.yml`(profile 분리, git 미포함)
+- Google OAuth Client ID/Secret, JWT secret은 Spring `application-local.yml`에, Claude API Key·나라장터 키·Slack Webhook URL은 `ai-engine/.env`에 보관합니다(관심사 분리 원칙에 따라 Spring은 AI/외부 API 키를 직접 갖지 않습니다). 전부 git 미포함.
 
 ### 5.4 성능 고려사항
 - 나라장터/AI 판단: 기존 검증된 `ThreadPoolExecutor` 병렬화 그대로 재사용 (88초→13초 경험 확장)
@@ -449,7 +449,7 @@ ai_engine/
 
 ### 하위 4개 기능 페이지
 - 동일한 다크 톤 + 상단 네비 유지, 좌측에 폼/입력 영역, 우측에 결과 카드 리스트 → 톤 일관성 유지
-- Phase 1에서는 우측 결과 영역에 "Phase 2+ 제공 예정" 안내가 표시됩니다.
+- Phase 2~5 구현 완료로 4개 페이지 모두 실제 결과가 표시됩니다.
 
 ### 프론트 구조
 ```
@@ -464,12 +464,12 @@ src/
 ---
 ## 7. 권장 개발 순서 (난이도 기반 로드맵)
 
-1. **Phase 1 (기반)**: Spring Boot + Google OAuth2 로그인 + React 레이아웃/메인 페이지 + **회사 자료실 페이지**(업로드/파싱까지) 우선 완성 — 이후 모든 기능의 전제조건이므로 가장 먼저 견고하게 구축 ✅ *이 저장소의 현재 구현 범위*
-2. **Phase 2 (재사용)**: 4번 나라장터 자동화 — 기존에 만든 Python 로직을 FastAPI 엔드포인트로 이식 (가장 리스크 낮음, 가장 먼저 완성 가능)
-3. **Phase 3**: 2번 문서 자동 채우기 (python-docx는 난이도 낮음, 자료실 연동 자동 채움은 이후 고도화)
-4. **Phase 4**: 1번 아이디어 제안 (자료실 자동 참조 + LLM 프롬프트 설계, 구현 난이도 중간)
-5. **Phase 5**: 3번 적격증빙자료 매칭 (임베딩/벡터 검색 — 4개 기능 중 난이도 최상, 마지막에 배치해 학습 곡선 확보)
-6. **Phase 6**: EC2 배포, Nginx/systemd 설정, 도메인 연결, HTTPS 적용, Google OAuth Redirect URI 운영 도메인으로 등록
+1. **Phase 1 (기반)**: Spring Boot + Google OAuth2 로그인 + React 레이아웃/메인 페이지 + **회사 자료실 페이지**(업로드/파싱까지) 우선 완성 — 이후 모든 기능의 전제조건이므로 가장 먼저 견고하게 구축 ✅ **구현 완료**
+2. **Phase 2 (재사용)**: 4번 나라장터 자동화 — 기존에 만든 Python 로직을 FastAPI 엔드포인트로 이식 (가장 리스크 낮음, 가장 먼저 완성 가능) ✅ **구현 완료**
+3. **Phase 3**: 2번 문서 자동 채우기 (python-docx는 난이도 낮음, 자료실 연동 자동 채움은 이후 고도화) ✅ **구현 완료**
+4. **Phase 4**: 1번 아이디어 제안 (자료실 자동 참조 + LLM 프롬프트 설계, 구현 난이도 중간) ✅ **구현 완료**
+5. **Phase 5**: 3번 적격증빙자료 매칭 (임베딩/벡터 검색 — 4개 기능 중 난이도 최상, 마지막에 배치해 학습 곡선 확보) ✅ **구현 완료** (벡터 검색은 코사인 유사도로 단순화 — 아래 피드백 절 참고)
+6. **Phase 6**: EC2 배포, Nginx/systemd 설정, 도메인 연결, HTTPS 적용, Google OAuth Redirect URI 운영 도메인으로 등록 — *아직 진행 전, 로컬 검증 후 진행 예정*
 
 ---
 ## Phase 1 구현 시 반영한 피드백
@@ -482,3 +482,18 @@ src/
 4. **비밀정보 위생**: 실제 키는 `*.example` 템플릿만 커밋하고 전부 로컬 `.env`/`application-local.yml`에서만 관리(`.gitignore` 처리). 초안 작성 중 노출됐던 Google OAuth 클라이언트 시크릿은 재발급이 필요합니다.
 5. **UI 톤**: all4land.com의 실제 톤(딥 네이비, 굵은 산세리프 헤드라인, 스탯 카운터, 얇은 헤어라인)을 참고해 6장을 보정. 로고·사진·문구는 사용하지 않고 톤과 레이아웃 문법만 참고했습니다.
 6. **플레이스홀더 정직성**: 아직 구현되지 않은 4개 기능(아이디어/문서/증빙/나라장터)은 화면 레이아웃은 설계서대로 만들되, API가 `{status: "not_implemented"}`를 반환하고 화면에는 "Phase 2+ 제공 예정"을 명확히 표시합니다. 동작하는 것처럼 흉내 내지 않습니다.
+
+---
+## Phase 2~5 구현 시 반영한 피드백
+
+Phase 2(나라장터)~5(증빙매칭)를 구현하며 초안 대비 아래 사항을 조정했습니다. 모든 기능의 사용자 흐름(업로드 → AI 처리 → 결과 확인) 자체는 설계서와 동일합니다.
+
+1. **알림 채널: Google Chat → Slack.** 사용자 요청에 따라 변경. Slack Incoming Webhook도 동일하게 `{"text": "..."}` JSON POST 방식이라 구현 난이도 차이는 없습니다. `NOTIFICATION_LOGS.channel`에 `"SLACK"`으로 기록됩니다.
+2. **임베딩: Claude API → 로컬 sentence-transformers.** Anthropic은 임베딩 전용 API를 제공하지 않습니다(생성형 모델만 제공). 설계서 0장에서 이미 `sentence-transformers`를 후보로 언급했으므로, 증빙자료 매칭(Phase 5)의 임베딩은 FastAPI 안에서 다국어 sentence-transformers 모델(`paraphrase-multilingual-MiniLM-L12-v2`)로 로컬 생성합니다 — 추가 API 키·비용이 들지 않습니다.
+3. **벡터 검색: pgvector/FAISS → 단순 코사인 유사도.** 한 회사의 증빙자료는 많아야 수십~수백 건 규모라 별도 벡터 DB·인덱스가 과합니다. `COMPANY_FILES`에 `embedding`(JSON 배열 문자열) 컬럼만 추가하고, 매칭 시점에 Spring이 후보 임베딩을 메모리로 로드해 코사인 유사도를 계산합니다. pgvector 확장 설치나 FAISS 인덱스 관리 없이 동일한 기능을 제공합니다.
+4. **나라장터 조회 방식: 키워드별 병렬 조회 → 목록 조회 후 필터링.** `getBidPblancListInfoServcPPSSrch` 오퍼레이션은 키워드 검색이 아니라 날짜범위 기반 목록 조회이므로, 날짜범위로 한 번에 가져온 뒤 제목에 키워드가 포함되는지로 필터링합니다. `ThreadPoolExecutor` 병렬화는 실제로 느린 구간(Claude 적격판단 호출)에 적용했습니다 — 기존 이력서 경험의 "병렬화로 88초→13초" 아이디어는 그대로 살리되 적용 지점만 실제 병목에 맞춰 옮겼습니다.
+5. **나라장터 API 키 사용법**: 인코딩키가 아니라 **디코딩키**를 사용하고, HTTP 클라이언트(Python `requests`)가 자체적으로 URL 인코딩하도록 맡깁니다. 인코딩키를 그대로 붙이면 이중 인코딩되어 인증 오류가 나는 흔한 실수입니다.
+6. **zip 압축: FastAPI → Spring.** 증빙 파일 원본이 이미 Spring의 로컬 스토리지에 있으므로, 전부 FastAPI로 전송했다가 다시 받는 왕복 없이 Spring이 직접 `java.util.zip`으로 압축합니다. AI 연산(임베딩·LLM)만 FastAPI가 담당한다는 관심사 분리 원칙은 유지됩니다.
+7. **DB 컬럼 타입: `@Lob String` → `columnDefinition = "TEXT"`.** Hibernate가 PostgreSQL에서 `@Lob String`을 기본적으로 `oid`(large object) 컬럼으로 매핑하는 것을 실제 기동 후 발견해 수정했습니다. `oid`는 별도 시스템 테이블에 저장되고 삭제 시 orphan이 남을 수 있어, 일반 텍스트 컬럼(`extracted_text`, `embedding`, `idea_content` 등)은 전부 `TEXT` 컬럼으로 명시했습니다.
+8. **문서 자동 채우기 고정정보 자동추출**: 회사 자료실 텍스트에서 Claude로 필드값을 추출하되, 추출 실패 시 해당 필드는 빈 값(플레이스홀더 유지)으로 두고 전체 요청은 실패시키지 않습니다.
+9. **외부 키 없이도 항상 부팅**: Claude/나라장터/Slack 키가 비어 있어도 앱은 정상 기동하고, 해당 기능은 빈 결과·SKIPPED 상태로 정직하게 응답합니다(크래시하지 않음) — Phase 1의 "정직한 플레이스홀더" 원칙을 실제 AI 연동에도 동일하게 적용했습니다.
