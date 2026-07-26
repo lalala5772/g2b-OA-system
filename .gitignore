@@ -1,0 +1,33 @@
+# backend (Gradle/Java)
+backend/.gradle/
+backend/build/
+backend/out/
+backend/data/
+backend/src/main/resources/application-local.yml
+backend/*.log
+
+# ai-engine (Python)
+ai-engine/.venv/
+ai-engine/__pycache__/
+ai-engine/**/__pycache__/
+ai-engine/.env
+ai-engine/*.egg-info/
+
+# frontend (Node)
+frontend/node_modules/
+frontend/dist/
+frontend/.env
+frontend/.env.local
+
+# editors / OS
+.idea/
+.vscode/
+*.iml
+.DS_Store
+
+# secrets — never commit
+*.pem
+*.p12
+.env
+.env.*
+!*.env.example
