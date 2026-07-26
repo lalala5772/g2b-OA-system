@@ -10,8 +10,6 @@ class Settings(BaseSettings):
     narajangteo_service_key: str = "not-configured"
     narajangteo_base_url: str = "https://apis.data.go.kr/1230000/ad/BidPublicInfoService"
 
-    slack_webhook_url: str = "not-configured"
-
     embedding_model: str = "paraphrase-multilingual-MiniLM-L12-v2"
 
     model_config = SettingsConfigDict(env_file=".env", extra="ignore")

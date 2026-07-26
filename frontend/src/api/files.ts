@@ -1,6 +1,6 @@
 import { apiClient, type ApiResponse } from './client'
 
-export type FilePurpose = 'CONTEST' | 'REQUIREMENT_DOC'
+export type FilePurpose = 'REQUIREMENT_DOC'
 
 export interface UploadedFile {
   id: number

@@ -3,7 +3,6 @@ import { NavLink, Outlet, useNavigate } from 'react-router-dom'
 import { fetchCurrentUser, logout, type CurrentUser } from '../api/auth'
 
 const NAV_ITEMS = [
-  { to: '/ideas', label: '아이디어' },
   { to: '/documents', label: '문서' },
   { to: '/evidence', label: '증빙' },
   { to: '/bids', label: '나라장터' },

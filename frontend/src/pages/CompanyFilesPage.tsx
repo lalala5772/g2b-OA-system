@@ -19,7 +19,6 @@ const PARSE_STATUS_LABELS: Record<CompanyFile['parseStatus'], string> = {
 
 export default function CompanyFilesPage() {
   const [activeCategory, setActiveCategory] = useState<FileCategory | undefined>(undefined)
-  const [uploadCategory, setUploadCategory] = useState<FileCategory>('DOMAIN_INTRO')
   const [files, setFiles] = useState<CompanyFile[]>([])
   const [isUploading, setIsUploading] = useState(false)
 
@@ -33,10 +32,11 @@ export default function CompanyFilesPage() {
   }, [activeCategory])
 
   async function handleFilesSelected(selected: File[]) {
+    if (!activeCategory) return
     setIsUploading(true)
     try {
       for (const file of selected) {
-        await uploadCompanyFile(file, uploadCategory)
+        await uploadCompanyFile(file, activeCategory)
       }
       await refresh()
     } finally {
@@ -78,24 +78,23 @@ export default function CompanyFilesPage() {
         </nav>
 
         <div>
-          <div className="flex flex-col gap-4 sm:flex-row sm:items-center">
-            <select
-              value={uploadCategory}
-              onChange={(e) => setUploadCategory(e.target.value as FileCategory)}
-              className="rounded border border-hairline bg-navy-900 px-3 py-2 text-sm text-offwhite"
-            >
-              {CATEGORIES.map((category) => (
-                <option key={category} value={category}>
-                  {CATEGORY_LABELS[category]}
-                </option>
-              ))}
-            </select>
-            {isUploading && <span className="text-xs text-muted">업로드 중…</span>}
-          </div>
-
-          <div className="mt-4">
-            <FileUploader onFilesSelected={handleFilesSelected} accept=".docx,.pdf,.hwp,.hwpx" />
-          </div>
+          {activeCategory ? (
+            <>
+              <div className="flex items-center gap-2">
+                <p className="text-sm text-offwhite">
+                  <span className="text-accent">{CATEGORY_LABELS[activeCategory]}</span> 카테고리에 업로드
+                </p>
+                {isUploading && <span className="text-xs text-muted">업로드 중…</span>}
+              </div>
+              <div className="mt-4">
+                <FileUploader onFilesSelected={handleFilesSelected} accept=".docx,.pdf,.hwp,.hwpx" />
+              </div>
+            </>
+          ) : (
+            <p className="rounded-lg border border-dashed border-hairline px-6 py-8 text-center text-sm text-muted">
+              업로드하려면 왼쪽에서 카테고리를 먼저 선택하세요.
+            </p>
+          )}
 
           <table className="mt-8 w-full text-left text-sm">
             <thead className="text-xs uppercase tracking-wide text-muted">

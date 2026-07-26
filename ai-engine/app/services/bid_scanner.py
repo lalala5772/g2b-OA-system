@@ -17,12 +17,20 @@ from app.services import llm_client
 OPERATION = "getBidPblancListInfoServcPPSSrch"
 
 
-def fetch_recent_notices(hours: int = 24, num_of_rows: int = 100) -> list[dict]:
+def _scan_window(now: datetime | None = None) -> tuple[datetime, datetime]:
+    """Fixed daily window: yesterday 10:00 -> today 10:00 (mirrors BidScanWindow.java)."""
+    now = now or datetime.now()
+    today_boundary = now.replace(hour=10, minute=0, second=0, microsecond=0)
+    end = today_boundary if now >= today_boundary else today_boundary - timedelta(days=1)
+    begin = end - timedelta(days=1)
+    return begin, end
+
+
+def fetch_recent_notices(num_of_rows: int = 100) -> list[dict]:
     if not settings.is_configured(settings.narajangteo_service_key):
         return []
 
-    now = datetime.now()
-    begin = now - timedelta(hours=hours)
+    begin, end = _scan_window()
     params = {
         # Use the raw (decoding) service key and let `requests` URL-encode it.
         # Appending the already-encoded key here double-encodes it and the
@@ -31,7 +39,7 @@ def fetch_recent_notices(hours: int = 24, num_of_rows: int = 100) -> list[dict]:
         "type": "json",
         "inqryDiv": "1",
         "inqryBgnDt": begin.strftime("%Y%m%d%H%M"),
-        "inqryEndDt": now.strftime("%Y%m%d%H%M"),
+        "inqryEndDt": end.strftime("%Y%m%d%H%M"),
         "pageNo": "1",
         "numOfRows": str(num_of_rows),
     }

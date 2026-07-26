@@ -23,11 +23,10 @@ public class BidScanScheduler {
 		try {
 			BidScanSummaryResponse summary = bidService.triggerScan();
 			log.info(
-					"나라장터 스캔 완료: fetched={}, new={}, eligible={}, notified={}",
+					"나라장터 스캔 완료: fetched={}, new={}, eligible={}",
 					summary.fetched(),
 					summary.newNotices(),
-					summary.eligibleCount(),
-					summary.notifiedCount());
+					summary.eligibleCount());
 		} catch (Exception ex) {
 			log.error("나라장터 스캔 실패", ex);
 		}

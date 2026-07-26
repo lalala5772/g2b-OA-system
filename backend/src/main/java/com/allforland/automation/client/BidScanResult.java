@@ -12,7 +12,5 @@ public record BidScanResult(
 		String url,
 		@JsonProperty("eligibility_score") Double eligibilityScore,
 		@JsonProperty("ai_judgement") String aiJudgement,
-		boolean eligible,
-		@JsonProperty("notification_status") String notificationStatus,
-		@JsonProperty("notification_response_code") Integer notificationResponseCode) {
+		boolean eligible) {
 }

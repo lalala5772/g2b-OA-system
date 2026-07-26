@@ -2,17 +2,18 @@ package com.allforland.automation.service.impl;
 
 import com.allforland.automation.client.AiEngineClient;
 import com.allforland.automation.client.BidScanResult;
+import com.allforland.automation.common.BidScanWindow;
 import com.allforland.automation.domain.BidKeyword;
 import com.allforland.automation.domain.BidNotice;
+import com.allforland.automation.domain.BidNoticeStatus;
 import com.allforland.automation.domain.FileCategory;
-import com.allforland.automation.domain.NotificationLog;
 import com.allforland.automation.dto.BidKeywordResponse;
 import com.allforland.automation.dto.BidNoticeResponse;
 import com.allforland.automation.dto.BidScanSummaryResponse;
+import com.allforland.automation.dto.BidWindowResponse;
 import com.allforland.automation.repository.BidKeywordRepository;
 import com.allforland.automation.repository.BidNoticeRepository;
 import com.allforland.automation.repository.CompanyFileRepository;
-import com.allforland.automation.repository.NotificationLogRepository;
 import com.allforland.automation.service.BidService;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
@@ -29,7 +30,6 @@ public class BidServiceImpl implements BidService {
 
 	private final BidKeywordRepository bidKeywordRepository;
 	private final BidNoticeRepository bidNoticeRepository;
-	private final NotificationLogRepository notificationLogRepository;
 	private final CompanyFileRepository companyFileRepository;
 	private final AiEngineClient aiEngineClient;
 	private final double eligibilityThreshold;
@@ -37,13 +37,11 @@ public class BidServiceImpl implements BidService {
 	public BidServiceImpl(
 			BidKeywordRepository bidKeywordRepository,
 			BidNoticeRepository bidNoticeRepository,
-			NotificationLogRepository notificationLogRepository,
 			CompanyFileRepository companyFileRepository,
 			AiEngineClient aiEngineClient,
 			@Value("${app.bid.eligibility-threshold}") double eligibilityThreshold) {
 		this.bidKeywordRepository = bidKeywordRepository;
 		this.bidNoticeRepository = bidNoticeRepository;
-		this.notificationLogRepository = notificationLogRepository;
 		this.companyFileRepository = companyFileRepository;
 		this.aiEngineClient = aiEngineClient;
 		this.eligibilityThreshold = eligibilityThreshold;
@@ -56,7 +54,7 @@ public class BidServiceImpl implements BidService {
 				.map(BidKeyword::getKeyword)
 				.toList();
 		if (keywords.isEmpty()) {
-			return new BidScanSummaryResponse(0, 0, 0, 0);
+			return new BidScanSummaryResponse(0, 0, 0);
 		}
 
 		String companyProfile = buildCompanyProfile();
@@ -64,7 +62,6 @@ public class BidServiceImpl implements BidService {
 
 		int newCount = 0;
 		int eligibleCount = 0;
-		int notifiedCount = 0;
 
 		for (BidScanResult result : results) {
 			if (result.externalBidNo() == null || bidNoticeRepository.findByExternalBidNo(result.externalBidNo()).isPresent()) {
@@ -80,32 +77,28 @@ public class BidServiceImpl implements BidService {
 					parseDate(result.announceDate()),
 					parseDate(result.deadline()),
 					result.url());
-			notice.applyEligibility(result.eligibilityScore(), result.aiJudgement());
-
+			notice.applyEligibility(result.eligibilityScore(), result.aiJudgement(), result.eligible());
 			if (result.eligible()) {
 				eligibleCount++;
-				notificationLogRepository.save(new NotificationLog(
-						notice, "SLACK", result.notificationStatus(), result.notificationResponseCode()));
-				if ("SUCCESS".equals(result.notificationStatus())) {
-					notifiedCount++;
-					notice.markNotified();
-				}
-			} else {
-				notice.markIgnored();
 			}
 
 			bidNoticeRepository.save(notice);
 		}
 
-		return new BidScanSummaryResponse(results.size(), newCount, eligibleCount, notifiedCount);
+		return new BidScanSummaryResponse(results.size(), newCount, eligibleCount);
 	}
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<BidNoticeResponse> recentNotices() {
-		return bidNoticeRepository.findTop50ByOrderByCrawledAtDesc().stream()
+	public BidWindowResponse eligibleInCurrentWindow() {
+		BidScanWindow.Window window = BidScanWindow.current();
+		List<BidNoticeResponse> notices = bidNoticeRepository
+				.findAllByStatusAndCrawledAtBetweenOrderByEligibilityScoreDesc(
+						BidNoticeStatus.ELIGIBLE, window.start(), window.end())
+				.stream()
 				.map(BidNoticeResponse::from)
 				.toList();
+		return new BidWindowResponse(window.start(), window.end(), notices);
 	}
 
 	@Override

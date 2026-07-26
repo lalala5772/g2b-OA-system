@@ -50,7 +50,7 @@ public class BidNotice {
 
 	@Enumerated(EnumType.STRING)
 	@Column(nullable = false)
-	private BidNoticeStatus status = BidNoticeStatus.DETECTED;
+	private BidNoticeStatus status;
 
 	@Column(name = "crawled_at", nullable = false)
 	private Instant crawledAt;
@@ -70,20 +70,13 @@ public class BidNotice {
 		this.announceDate = announceDate;
 		this.deadline = deadline;
 		this.url = url;
-		this.status = BidNoticeStatus.DETECTED;
+		this.status = BidNoticeStatus.INELIGIBLE;
 		this.crawledAt = Instant.now();
 	}
 
-	public void applyEligibility(Double score, String judgement) {
+	public void applyEligibility(Double score, String judgement, boolean eligible) {
 		this.eligibilityScore = score;
 		this.aiJudgement = judgement;
-	}
-
-	public void markNotified() {
-		this.status = BidNoticeStatus.NOTIFIED;
-	}
-
-	public void markIgnored() {
-		this.status = BidNoticeStatus.IGNORED;
+		this.status = eligible ? BidNoticeStatus.ELIGIBLE : BidNoticeStatus.INELIGIBLE;
 	}
 }

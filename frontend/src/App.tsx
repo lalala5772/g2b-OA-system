@@ -3,7 +3,6 @@ import Layout from './components/Layout'
 import LoginPage from './pages/LoginPage'
 import DashboardPage from './pages/DashboardPage'
 import CompanyFilesPage from './pages/CompanyFilesPage'
-import IdeaPage from './pages/IdeaPage'
 import DocumentPage from './pages/DocumentPage'
 import EvidencePage from './pages/EvidencePage'
 import BidPage from './pages/BidPage'
@@ -15,7 +14,6 @@ export default function App() {
       <Route element={<Layout />}>
         <Route path="/dashboard" element={<DashboardPage />} />
         <Route path="/company-files" element={<CompanyFilesPage />} />
-        <Route path="/ideas" element={<IdeaPage />} />
         <Route path="/documents" element={<DocumentPage />} />
         <Route path="/evidence" element={<EvidencePage />} />
         <Route path="/bids" element={<BidPage />} />

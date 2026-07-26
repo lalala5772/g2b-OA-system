@@ -37,7 +37,7 @@ public class AiEngineClient {
 		this.longTimeout = Duration.ofSeconds(longTimeoutSeconds);
 	}
 
-	/** LLM-backed calls (bid scans, idea generation, ...) run longer than a plain file parse. */
+	/** LLM-backed calls (bid scans, ...) run longer than a plain file parse. */
 	public List<BidScanResult> scanBids(List<String> keywords, String companyProfile, double eligibilityThreshold) {
 		try {
 			ScanResponse response = webClient.post()
@@ -85,34 +85,6 @@ public class AiEngineClient {
 		} catch (Exception ex) {
 			return null;
 		}
-	}
-
-	public List<GeneratedIdea> generateIdeas(String contestText, List<String> companyDomainTexts) {
-		try {
-			IdeasResponse response = webClient.post()
-					.uri("/ideas/generate")
-					.contentType(MediaType.APPLICATION_JSON)
-					.bodyValue(new IdeasRequest(contestText, companyDomainTexts))
-					.retrieve()
-					.bodyToMono(IdeasResponse.class)
-					.timeout(longTimeout)
-					.block();
-			return response == null ? List.of() : response.ideas();
-		} catch (Exception ex) {
-			return List.of();
-		}
-	}
-
-	private record IdeasRequest(
-			@JsonProperty("contest_text") String contestText,
-			@JsonProperty("company_domain_texts") List<String> companyDomainTexts) {
-	}
-
-	private record IdeasResponse(List<GeneratedIdea> ideas) {
-	}
-
-	public record GeneratedIdea(
-			String title, String content, @JsonProperty("relevance_score") Double relevanceScore) {
 	}
 
 	public Map<String, String> extractFields(String companyText, List<String> fieldKeys) {

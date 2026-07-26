@@ -16,15 +16,20 @@ export interface BidNotice {
   url: string | null
   eligibilityScore: number | null
   aiJudgement: string | null
-  status: 'DETECTED' | 'NOTIFIED' | 'IGNORED'
+  status: 'ELIGIBLE' | 'INELIGIBLE'
   crawledAt: string
+}
+
+export interface BidWindow {
+  windowStart: string
+  windowEnd: string
+  notices: BidNotice[]
 }
 
 export interface BidScanSummary {
   fetched: number
   newNotices: number
   eligibleCount: number
-  notifiedCount: number
 }
 
 export async function listKeywords(): Promise<BidKeyword[]> {
@@ -41,8 +46,9 @@ export async function removeKeyword(id: number): Promise<void> {
   await apiClient.delete(`/api/bids/keywords/${id}`)
 }
 
-export async function listRecentNotices(): Promise<BidNotice[]> {
-  const { data } = await apiClient.get<ApiResponse<BidNotice[]>>('/api/bids/recent')
+/** 어제 오전 10시 ~ 오늘 오전 10시 사이 감지된 적격 공고 */
+export async function fetchEligibleWindow(): Promise<BidWindow> {
+  const { data } = await apiClient.get<ApiResponse<BidWindow>>('/api/bids/eligible')
   return data.data
 }
 

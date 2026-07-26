@@ -2,7 +2,7 @@
 
 업무 자동화 플랫폼 — Spring Boot(핵심 서비스) + FastAPI(AI/문서 엔진) + React 하이브리드 구조.
 
-전체 설계와 로드맵은 [`docs/DESIGN.md`](docs/DESIGN.md)를 참고하세요. Phase 1(로그인/대시보드/회사 자료실)부터 Phase 5(적격증빙자료 매칭)까지 구현되어 있습니다.
+전체 설계와 로드맵은 [`docs/DESIGN.md`](docs/DESIGN.md)를 참고하세요. Phase 1(로그인/대시보드/회사 자료실)부터 Phase 5(적격증빙자료 매칭)까지 구현되어 있습니다(아이디어 제안 기능은 사용자 요청으로 범위에서 제외).
 
 ## 구성
 
@@ -29,12 +29,11 @@ cp frontend/.env.example frontend/.env
 
 **`ai-engine/.env`**
 - `AI_ENGINE_API_KEY` — 위와 동일한 값
-- `CLAUDE_API_KEY` / `CLAUDE_MODEL` — 나라장터 적격판단·문서 필드 자동추출·아이디어 제안·증빙 요건 추출에 사용
+- `CLAUDE_API_KEY` / `CLAUDE_MODEL` — 나라장터 적격판단·문서 필드 자동추출·증빙 요건 추출에 사용
 - `NARAJANGTEO_SERVICE_KEY` — 나라장터 Open API **디코딩키**(인코딩키 아님 — 인코딩키를 넣으면 이중 인코딩되어 인증 오류가 납니다)
-- `SLACK_WEBHOOK_URL` — 비워두면 알림 전송을 건너뛰고 로그만 남깁니다(크래시 없음)
 - `EMBEDDING_MODEL` — 기본값 그대로 두면 됩니다(로컬 sentence-transformers, API 키 불필요)
 
-Claude/나라장터/Slack 키가 없어도 앱은 정상적으로 뜨고, 해당 기능만 "결과 없음"으로 정직하게 응답합니다(크래시하지 않음).
+Claude/나라장터 키가 없어도 앱은 정상적으로 뜨고, 해당 기능만 "결과 없음"으로 정직하게 응답합니다(크래시하지 않음).
 
 ### 1. DB
 ```bash
@@ -55,7 +54,7 @@ uvicorn app.main:app --reload --port 8000
 cd backend
 SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
 ```
-나라장터 자동 스캔은 매일 `app.bid.scan-cron`(기본 09:00, `BID_SCAN_CRON`으로 변경 가능) 시각에 자동 실행됩니다. 즉시 테스트하려면 나라장터 페이지의 "지금 스캔 실행" 버튼을 사용하세요. 키워드는 `BID_KEYWORDS_SEED`(콤마 구분, 최초 기동 시 1회 시드) 환경변수나 나라장터 페이지에서 직접 추가할 수 있습니다.
+나라장터 자동 스캔은 매일 `app.bid.scan-cron`(기본 10:00, `BID_SCAN_CRON`으로 변경 가능) 시각에 자동 실행됩니다. 즉시 테스트하려면 나라장터 페이지의 "지금 스캔 실행" 버튼을 사용하세요. 키워드는 `BID_KEYWORDS_SEED`(콤마 구분, 최초 기동 시 1회 시드) 환경변수나 나라장터 페이지에서 직접 추가할 수 있습니다.
 
 ### 4. Frontend
 ```bash
@@ -65,18 +64,22 @@ npm run dev
 ```
 
 ## 현재 구현 범위
-- **Phase 1**: Google OAuth2 로그인, 대시보드 허브, 회사 자료실(업로드/파싱/목록/삭제)
-- **Phase 2**: 나라장터 자동화 — 키워드 관리, 매일 자동 스캔(`@Scheduled`) + 수동 실행, AI 적격판단, Slack 알림
+- **Phase 1**: Google OAuth2 로그인, 대시보드 허브, 회사 자료실(업로드/파싱/목록/삭제) — 업로드는 왼쪽에서 선택한 카테고리로만 들어갑니다(목록 필터와 업로드 대상이 동일한 상태를 공유)
+- **Phase 2**: 나라장터 자동화 — 키워드 관리, 매일 자동 스캔(`@Scheduled`) + 수동 실행, AI 적격판단. **어제 오전 10시 ~ 오늘 오전 10시** 고정 윈도우의 적격 공고를 나라장터 페이지에 나열(외부 알림 채널 없음)
 - **Phase 3**: 문서 자동 채우기 — Word 템플릿 업로드, 회사 고정정보 자동추출 + 나머지 항목 수동입력, 다운로드
-- **Phase 4**: 아이디어 제안 — 공모전 파일 업로드 → 자료실 도메인소개 자료 자동 참조 → 아이디어 생성
 - **Phase 5**: 적격증빙자료 매칭 — 공고문 업로드 → 제출서류 추출 → 자료실 증빙자료와 임베딩 매칭 → ZIP 생성
+
+> 아이디어 제안(원래의 Phase 4)은 사용자 요청으로 제거했습니다. `docs/DESIGN.md`에는 원래 설계 내용이 기록으로 남아있습니다.
 
 ## 나라장터 API 관련 주의사항
 `getBidPblancListInfoServcPPSSrch` 오퍼레이션의 요청/응답 필드는 공개된 예제와 문서를 참고해 구현했으며, 공식 Swagger 전체를 확인하지는 못했습니다(`ai-engine/app/services/bid_scanner.py`). 실제 키로 처음 실행했을 때 응답 필드명이 다르면(예: 날짜 필드, URL 필드) `_parse_date` 및 `item.get(...)` 부분을 응답 형태에 맞게 조정해주세요. 파싱은 방어적으로 되어 있어 필드가 안 맞아도 크래시 없이 빈 값으로 처리됩니다.
 
+조회 윈도우는 항상 **"오늘 10시 기준 최근 완료된 10시~10시 24시간"**으로 고정됩니다(`BidScanWindow.java` / `bid_scanner._scan_window()`). 스케줄러가 10시에 자동 실행되든, 사용자가 다른 시각에 "지금 스캔 실행"을 누르든 같은 윈도우를 기준으로 조회·표시됩니다.
+
 ## 설계서 대비 구현 편차
 Phase 2~5를 구현하며 설계서(`docs/DESIGN.md`) 원안에서 몇 가지를 실용적으로 조정했습니다 — 상세 이유는 문서 하단 참고:
-- 알림 채널: Google Chat → **Slack** Incoming Webhook
+- 아이디어 제안 기능: **제거** (사용자 요청)
+- 알림 채널: Google Chat → ~~Slack~~ → **제거, 웹페이지에 직접 나열**로 재변경 (사용자 요청)
 - 임베딩: Claude API(임베딩 미제공) → **로컬 sentence-transformers**
 - 벡터 검색: pgvector/FAISS → **단순 코사인 유사도**(회사 자료 규모에서는 충분)
 

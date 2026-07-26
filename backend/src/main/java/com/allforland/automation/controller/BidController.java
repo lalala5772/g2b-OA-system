@@ -2,8 +2,8 @@ package com.allforland.automation.controller;
 
 import com.allforland.automation.common.ApiResponse;
 import com.allforland.automation.dto.BidKeywordResponse;
-import com.allforland.automation.dto.BidNoticeResponse;
 import com.allforland.automation.dto.BidScanSummaryResponse;
+import com.allforland.automation.dto.BidWindowResponse;
 import com.allforland.automation.service.BidService;
 import java.util.List;
 import java.util.Map;
@@ -25,9 +25,9 @@ public class BidController {
 		this.bidService = bidService;
 	}
 
-	@GetMapping("/recent")
-	public ApiResponse<List<BidNoticeResponse>> recent() {
-		return ApiResponse.ok(bidService.recentNotices());
+	@GetMapping("/eligible")
+	public ApiResponse<BidWindowResponse> eligible() {
+		return ApiResponse.ok(bidService.eligibleInCurrentWindow());
 	}
 
 	@PostMapping("/scan-now")

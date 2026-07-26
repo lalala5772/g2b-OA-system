@@ -1,15 +1,16 @@
 package com.allforland.automation.service;
 
 import com.allforland.automation.dto.BidKeywordResponse;
-import com.allforland.automation.dto.BidNoticeResponse;
 import com.allforland.automation.dto.BidScanSummaryResponse;
+import com.allforland.automation.dto.BidWindowResponse;
 import java.util.List;
 
 public interface BidService {
 
 	BidScanSummaryResponse triggerScan();
 
-	List<BidNoticeResponse> recentNotices();
+	/** 어제 10:00 ~ 오늘 10:00 사이 감지된 적격 공고. */
+	BidWindowResponse eligibleInCurrentWindow();
 
 	List<BidKeywordResponse> listKeywords();
 

@@ -16,13 +16,7 @@ export default function DashboardPage() {
         오늘의 업무 현황
       </h1>
 
-      <div className="mt-10 grid gap-5 md:grid-cols-2">
-        <FeatureCard
-          to="/ideas"
-          title="아이디어 제안"
-          description="공모전 파일을 올리면 회사 자료실 정보를 참고해 아이디어를 제안합니다."
-          badge={summary?.idea.badge}
-        />
+      <div className="mt-10 grid gap-5 md:grid-cols-3">
         <FeatureCard
           to="/documents"
           title="문서 자동 채우기"
