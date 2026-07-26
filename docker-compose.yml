@@ -1,0 +1,14 @@
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: g2b_oa
+      POSTGRES_USER: g2b_oa
+      POSTGRES_PASSWORD: g2b_oa
+    ports:
+      - "5432:5432"
+    volumes:
+      - g2b_oa_postgres_data:/var/lib/postgresql/data
+
+volumes:
+  g2b_oa_postgres_data:

@@ -1,0 +1,20 @@
+# cp application-local.yml.example application-local.yml
+# then: SPRING_PROFILES_ACTIVE=local ./gradlew bootRun
+# application-local.yml is gitignored — never commit real secrets.
+
+spring:
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: YOUR_GOOGLE_OAUTH_CLIENT_ID
+            client-secret: YOUR_GOOGLE_OAUTH_CLIENT_SECRET
+            scope: openid,profile,email
+
+app:
+  jwt:
+    secret: replace-with-a-random-32-byte-secret
+
+ai-engine:
+  api-key: replace-with-a-random-shared-secret
