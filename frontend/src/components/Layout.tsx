@@ -32,10 +32,10 @@ export default function Layout() {
     <div className="min-h-screen bg-navy-950 text-offwhite">
       <header className="sticky top-0 z-10 border-b border-hairline bg-navy-950/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
-          <NavLink to="/dashboard" className="text-sm font-semibold tracking-[0.2em] text-offwhite">
-            G2B · OA SYSTEM
+          <NavLink to="/dashboard" className="font-serif text-lg tracking-wide text-offwhite">
+            G2B — Automation
           </NavLink>
-          <nav className="flex items-center gap-6 text-sm text-muted">
+          <nav className="flex items-center gap-8 text-sm text-muted">
             {NAV_ITEMS.map((item) => (
               <NavLink
                 key={item.to}
@@ -48,17 +48,15 @@ export default function Layout() {
               </NavLink>
             ))}
           </nav>
-          <div className="flex items-center gap-3">
+          <div className="flex items-center gap-2.5 text-sm text-muted">
             {user && (
               <>
                 {user.profileImageUrl && (
-                  <img src={user.profileImageUrl} alt="" className="h-7 w-7 rounded-full" />
+                  <img src={user.profileImageUrl} alt="" className="mr-1 h-6 w-6 rounded-full" />
                 )}
-                <span className="text-sm text-muted">{user.name}</span>
-                <button
-                  onClick={handleLogout}
-                  className="text-sm text-muted transition-colors hover:text-offwhite"
-                >
+                <span>{user.name}</span>
+                <span className="text-hairline">/</span>
+                <button onClick={handleLogout} className="transition-colors hover:text-offwhite">
                   로그아웃
                 </button>
               </>

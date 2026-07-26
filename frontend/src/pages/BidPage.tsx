@@ -102,7 +102,7 @@ export default function BidPage() {
           <button
             onClick={handleScanNow}
             disabled={isScanning}
-            className="mt-8 w-full rounded border border-hairline py-2 text-sm text-offwhite hover:border-accent disabled:opacity-50"
+            className="mt-8 w-full rounded-full border border-hairline py-2.5 text-sm tracking-wide text-offwhite transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
           >
             {isScanning ? '스캔 중…' : '지금 스캔 실행'}
           </button>

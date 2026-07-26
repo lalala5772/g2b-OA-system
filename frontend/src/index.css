@@ -1,18 +1,31 @@
 @import "tailwindcss";
+@import "@fontsource/instrument-serif";
 
+/*
+ * Palette shifted from the original navy/blue tone to a warm charcoal +
+ * parchment tone (ref: imweb "Cera — Mix" template). Token *names* were kept
+ * (navy-*, accent, offwhite, muted, hairline) to avoid touching every
+ * className across the app — only the values moved.
+ */
 @theme {
-  --color-navy-950: #060a14;
-  --color-navy-900: #0b1220;
-  --color-navy-800: #121b2e;
-  --color-navy-700: #1b2740;
-  --color-navy-600: #263353;
-  --color-hairline: rgba(226, 232, 240, 0.12);
-  --color-offwhite: #e7ebf2;
-  --color-muted: #8b94a7;
-  --color-accent: #4f8cff;
-  --color-accent-soft: rgba(79, 140, 255, 0.14);
+  --color-navy-950: #17140f;
+  --color-navy-900: #201c16;
+  --color-navy-800: #2b261e;
+  --color-navy-700: #3a3327;
+  --color-navy-600: #4c4433;
+  --color-hairline: rgba(240, 233, 219, 0.14);
+  --color-offwhite: #f3efe6;
+  --color-muted: #a39a89;
+  --color-accent: #d8c8a8;
+  --color-accent-soft: rgba(216, 200, 168, 0.14);
+
+  --color-ok: #8faa8b;
+  --color-ok-soft: rgba(143, 170, 139, 0.14);
+  --color-pending: #c99a5b;
+  --color-pending-soft: rgba(201, 154, 91, 0.14);
 
   --font-sans: 'Pretendard Variable', Pretendard, -apple-system, 'Noto Sans KR', system-ui, sans-serif;
+  --font-serif: 'Instrument Serif', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Nanum Myeongjo', serif;
 }
 
 body {

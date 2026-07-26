@@ -51,7 +51,7 @@ export default function EvidencePage() {
                   {result.zipExportId && (
                     <a
                       href={zipDownloadUrl(result.zipExportId)}
-                      className="rounded border border-hairline px-3 py-1 text-xs text-offwhite hover:border-accent"
+                      className="rounded-full border border-hairline px-4 py-1.5 text-xs tracking-wide text-offwhite transition-colors hover:border-accent hover:text-accent"
                     >
                       ZIP 다운로드
                     </a>

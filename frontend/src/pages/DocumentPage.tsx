@@ -99,7 +99,7 @@ export default function DocumentPage() {
             <button
               onClick={handleGenerate}
               disabled={!selectedId || isGenerating}
-              className="mt-6 w-full rounded border border-hairline py-2 text-sm text-offwhite hover:border-accent disabled:opacity-50"
+              className="mt-6 w-full rounded-full border border-hairline py-2.5 text-sm tracking-wide text-offwhite transition-colors hover:border-accent hover:text-accent disabled:opacity-50"
             >
               {isGenerating ? '생성 중…' : '문서 생성'}
             </button>
@@ -159,7 +159,7 @@ export default function DocumentPage() {
               {result.status === 'SUCCESS' && (
                 <a
                   href={downloadUrl(result.id)}
-                  className="inline-block rounded border border-hairline px-4 py-2 text-sm text-offwhite hover:border-accent"
+                  className="inline-block rounded-full border border-hairline px-5 py-2 text-sm tracking-wide text-offwhite transition-colors hover:border-accent hover:text-accent"
                 >
                   다운로드
                 </a>
