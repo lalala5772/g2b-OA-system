@@ -35,6 +35,15 @@ cp frontend/.env.example frontend/.env
 
 Claude/나라장터 키가 없어도 앱은 정상적으로 뜨고, 해당 기능만 "결과 없음"으로 정직하게 응답합니다(크래시하지 않음).
 
+### 한 번에 실행 (권장)
+사전 준비(위 0단계)만 끝냈다면, 아래 명령 하나로 Postgres·AI Engine·Backend·Frontend를 전부 백그라운드로 띄웁니다:
+```bash
+./scripts/dev.sh
+```
+최초 실행 시 `ai-engine/.venv`와 `frontend/node_modules`가 없으면 자동으로 만들어줍니다. `Ctrl+C`를 누르면 4개 프로세스와 Postgres 컨테이너까지 한 번에 정리됩니다. 개별 로그는 `logs/backend.log`, `logs/ai-engine.log`, `logs/frontend.log`에서 확인하세요(`tail -f logs/backend.log`).
+
+각 서비스를 따로 띄우거나 디버깅하고 싶다면 아래 1~4단계를 그대로 따라가면 됩니다.
+
 ### 1. DB
 ```bash
 docker compose up -d postgres

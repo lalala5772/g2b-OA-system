@@ -19,6 +19,9 @@ frontend/dist/
 frontend/.env
 frontend/.env.local
 
+# scripts/dev.sh output
+/logs/
+
 # editors / OS
 .idea/
 .vscode/
