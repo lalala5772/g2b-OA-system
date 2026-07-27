@@ -11,6 +11,8 @@ class ScanRequest(BaseModel):
     keywords: list[str]
     company_profile: str = ""
     eligibility_threshold: float = 0.6
+    start_date: str | None = None
+    end_date: str | None = None
 
 
 class BidResult(BaseModel):
@@ -22,12 +24,16 @@ class BidResult(BaseModel):
     deadline: str | None = None
     url: str | None = None
     eligibility_score: float | None = None
+    ai_summary: str | None = None
     ai_judgement: str | None = None
     eligible: bool = False
 
 
 class ScanResponse(BaseModel):
     results: list[BidResult]
+    fetched: int
+    range_start: str
+    range_end: str
 
 
 def verify_api_key(x_api_key: str) -> None:
@@ -39,5 +45,16 @@ def verify_api_key(x_api_key: str) -> None:
 def scan(payload: ScanRequest, x_api_key: str = Header(default="")) -> ScanResponse:
     verify_api_key(x_api_key)
 
-    raw_results = bid_scanner.scan(payload.keywords, payload.company_profile, payload.eligibility_threshold)
-    return ScanResponse(results=[BidResult(**item) for item in raw_results])
+    outcome = bid_scanner.scan(
+        payload.keywords,
+        payload.company_profile,
+        payload.eligibility_threshold,
+        payload.start_date,
+        payload.end_date,
+    )
+    return ScanResponse(
+        results=[BidResult(**item) for item in outcome["results"]],
+        fetched=outcome["fetched"],
+        range_start=outcome["range_start"],
+        range_end=outcome["range_end"],
+    )

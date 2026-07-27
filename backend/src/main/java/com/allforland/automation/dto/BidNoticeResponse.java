@@ -14,6 +14,7 @@ public record BidNoticeResponse(
 		LocalDate deadline,
 		String url,
 		Double eligibilityScore,
+		String aiSummary,
 		String aiJudgement,
 		BidNoticeStatus status,
 		Instant crawledAt) {
@@ -28,6 +29,7 @@ public record BidNoticeResponse(
 				notice.getDeadline(),
 				notice.getUrl(),
 				notice.getEligibilityScore(),
+				notice.getAiSummary(),
 				notice.getAiJudgement(),
 				notice.getStatus(),
 				notice.getCrawledAt());

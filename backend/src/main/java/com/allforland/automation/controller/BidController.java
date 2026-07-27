@@ -2,9 +2,11 @@ package com.allforland.automation.controller;
 
 import com.allforland.automation.common.ApiResponse;
 import com.allforland.automation.dto.BidKeywordResponse;
+import com.allforland.automation.dto.BidNoticeResponse;
+import com.allforland.automation.dto.BidScanRequest;
 import com.allforland.automation.dto.BidScanSummaryResponse;
-import com.allforland.automation.dto.BidWindowResponse;
 import com.allforland.automation.service.BidService;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import org.springframework.web.bind.annotation.DeleteMapping;
@@ -26,13 +28,20 @@ public class BidController {
 	}
 
 	@GetMapping("/eligible")
-	public ApiResponse<BidWindowResponse> eligible() {
-		return ApiResponse.ok(bidService.eligibleInCurrentWindow());
+	public ApiResponse<List<BidNoticeResponse>> eligible() {
+		return ApiResponse.ok(bidService.recentEligible());
+	}
+
+	@GetMapping("/{id}")
+	public ApiResponse<BidNoticeResponse> get(@PathVariable Long id) {
+		return ApiResponse.ok(bidService.getById(id));
 	}
 
 	@PostMapping("/scan-now")
-	public ApiResponse<BidScanSummaryResponse> scanNow() {
-		return ApiResponse.ok(bidService.triggerScan());
+	public ApiResponse<BidScanSummaryResponse> scanNow(@RequestBody(required = false) BidScanRequest request) {
+		LocalDate startDate = request != null ? request.startDate() : null;
+		LocalDate endDate = request != null ? request.endDate() : null;
+		return ApiResponse.ok(bidService.triggerScan(startDate, endDate));
 	}
 
 	@GetMapping("/keywords")

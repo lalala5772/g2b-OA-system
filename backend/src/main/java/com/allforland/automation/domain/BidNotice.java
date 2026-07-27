@@ -45,6 +45,11 @@ public class BidNotice {
 	@Column(name = "eligibility_score")
 	private Double eligibilityScore;
 
+	/** Claude가 정리한 공고 내용 요약. */
+	@Column(name = "ai_summary", columnDefinition = "TEXT")
+	private String aiSummary;
+
+	/** Claude가 제시한 추천/비추천 이유. */
 	@Column(name = "ai_judgement", columnDefinition = "TEXT")
 	private String aiJudgement;
 
@@ -74,8 +79,9 @@ public class BidNotice {
 		this.crawledAt = Instant.now();
 	}
 
-	public void applyEligibility(Double score, String judgement, boolean eligible) {
+	public void applyEligibility(Double score, String summary, String judgement, boolean eligible) {
 		this.eligibilityScore = score;
+		this.aiSummary = summary;
 		this.aiJudgement = judgement;
 		this.status = eligible ? BidNoticeStatus.ELIGIBLE : BidNoticeStatus.INELIGIBLE;
 	}

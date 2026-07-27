@@ -1,6 +1,5 @@
 package com.allforland.automation.service.impl;
 
-import com.allforland.automation.common.BidScanWindow;
 import com.allforland.automation.domain.BidNoticeStatus;
 import com.allforland.automation.domain.FileCategory;
 import com.allforland.automation.dto.DashboardSummaryResponse;
@@ -41,9 +40,7 @@ public class DashboardServiceImpl implements DashboardService {
 		}
 		long total = byCategory.values().stream().mapToLong(Long::longValue).sum();
 
-		BidScanWindow.Window window = BidScanWindow.current();
-		long eligibleCount = bidNoticeRepository.countByStatusAndCrawledAtBetween(
-				BidNoticeStatus.ELIGIBLE, window.start(), window.end());
+		long eligibleCount = bidNoticeRepository.countByStatus(BidNoticeStatus.ELIGIBLE);
 		FeatureStatus bidStatus = new FeatureStatus("available", eligibleCount + "건 적격 공고 감지");
 
 		long templateCount = documentTemplateRepository.count();

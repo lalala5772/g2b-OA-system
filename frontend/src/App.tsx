@@ -6,6 +6,7 @@ import CompanyFilesPage from './pages/CompanyFilesPage'
 import DocumentPage from './pages/DocumentPage'
 import EvidencePage from './pages/EvidencePage'
 import BidPage from './pages/BidPage'
+import BidDetailPage from './pages/BidDetailPage'
 
 export default function App() {
   return (
@@ -17,6 +18,7 @@ export default function App() {
         <Route path="/documents" element={<DocumentPage />} />
         <Route path="/evidence" element={<EvidencePage />} />
         <Route path="/bids" element={<BidPage />} />
+        <Route path="/bids/:id" element={<BidDetailPage />} />
       </Route>
     </Routes>
   )

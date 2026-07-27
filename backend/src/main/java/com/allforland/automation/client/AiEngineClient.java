@@ -3,6 +3,7 @@ package com.allforland.automation.client;
 import com.fasterxml.jackson.annotation.JsonProperty;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
@@ -38,29 +39,52 @@ public class AiEngineClient {
 	}
 
 	/** LLM-backed calls (bid scans, ...) run longer than a plain file parse. */
-	public List<BidScanResult> scanBids(List<String> keywords, String companyProfile, double eligibilityThreshold) {
+	public BidScanOutcome scanBids(
+			List<String> keywords,
+			String companyProfile,
+			double eligibilityThreshold,
+			LocalDate startDate,
+			LocalDate endDate) {
 		try {
 			ScanResponse response = webClient.post()
 					.uri("/bids/scan")
 					.contentType(MediaType.APPLICATION_JSON)
-					.bodyValue(new ScanRequest(keywords, companyProfile, eligibilityThreshold))
+					.bodyValue(new ScanRequest(
+							keywords,
+							companyProfile,
+							eligibilityThreshold,
+							startDate != null ? startDate.toString() : null,
+							endDate != null ? endDate.toString() : null))
 					.retrieve()
 					.bodyToMono(new ParameterizedTypeReference<ScanResponse>() {})
 					.timeout(longTimeout)
 					.block();
-			return response == null ? List.of() : response.results();
+			if (response == null) {
+				return BidScanOutcome.empty(startDate, endDate);
+			}
+			return new BidScanOutcome(
+					response.results(),
+					response.fetched(),
+					LocalDate.parse(response.rangeStart()),
+					LocalDate.parse(response.rangeEnd()));
 		} catch (Exception ex) {
-			return List.of();
+			return BidScanOutcome.empty(startDate, endDate);
 		}
 	}
 
 	private record ScanRequest(
 			List<String> keywords,
 			@JsonProperty("company_profile") String companyProfile,
-			@JsonProperty("eligibility_threshold") double eligibilityThreshold) {
+			@JsonProperty("eligibility_threshold") double eligibilityThreshold,
+			@JsonProperty("start_date") String startDate,
+			@JsonProperty("end_date") String endDate) {
 	}
 
-	private record ScanResponse(List<BidScanResult> results) {
+	private record ScanResponse(
+			List<BidScanResult> results,
+			int fetched,
+			@JsonProperty("range_start") String rangeStart,
+			@JsonProperty("range_end") String rangeEnd) {
 	}
 
 	public byte[] fillDocument(byte[] templateBytes, String templateFilename, Map<String, String> fieldValues) {

@@ -11,6 +11,7 @@ public record BidScanResult(
 		String deadline,
 		String url,
 		@JsonProperty("eligibility_score") Double eligibilityScore,
+		@JsonProperty("ai_summary") String aiSummary,
 		@JsonProperty("ai_judgement") String aiJudgement,
 		boolean eligible) {
 }

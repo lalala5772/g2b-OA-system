@@ -12,10 +12,12 @@ import {
 
 const CATEGORIES: FileCategory[] = ['DOMAIN_INTRO', 'EVIDENCE', 'CERTIFICATE', 'FINANCE', 'ETC']
 
+// 실제로 이 파일에서 하는 건 AI 분석이 아니라 텍스트 추출(문서 자동 채우기·나라장터 적격판단·증빙 매칭이
+// 이 텍스트를 재료로 씀)이라, 라벨도 "분석"이 아니라 "추출"로 정확하게 표기합니다.
 const PARSE_STATUS_LABELS: Record<CompanyFile['parseStatus'], string> = {
-  PENDING: '분석 중',
-  SUCCESS: '분석 완료',
-  FAILED: '분석 실패',
+  PENDING: '추출 대기',
+  SUCCESS: '텍스트 추출 완료',
+  FAILED: '텍스트 추출 실패',
 }
 
 export default function CompanyFilesPage() {

@@ -11,6 +11,7 @@ import json
 import re
 from functools import lru_cache
 
+import anthropic
 from anthropic import Anthropic
 
 from app.core.config import settings
@@ -32,12 +33,17 @@ def ask_json(system_prompt: str, user_prompt: str, max_tokens: int = 1536):
     if client is None:
         return None
 
-    response = client.messages.create(
-        model=settings.claude_model,
-        max_tokens=max_tokens,
-        system=system_prompt,
-        messages=[{"role": "user", "content": user_prompt}],
-    )
+    try:
+        response = client.messages.create(
+            model=settings.claude_model,
+            max_tokens=max_tokens,
+            system=system_prompt,
+            messages=[{"role": "user", "content": user_prompt}],
+        )
+    except anthropic.APIError:
+        # A single failed call (rate limit, low credit, transient outage) shouldn't
+        # take down a whole batch of parallel judgment calls — degrade to "unjudged".
+        return None
     text = "".join(block.text for block in response.content if block.type == "text")
     return _extract_json(text)
 

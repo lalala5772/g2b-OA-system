@@ -6,9 +6,9 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 
 /**
- * The platform always looks at a fixed daily window — yesterday 10:00 to today 10:00 — rather
- * than a rolling "last 24h from now". This keeps a scheduled run and a manual "지금 스캔 실행"
- * click show the same window on the bid page.
+ * Fixed daily window (yesterday 10:00 -> today 10:00) used only as the default range for the
+ * automatic {@code @Scheduled} bid scan. Manual scans from the UI take an explicit date range
+ * instead (see {@code BidService#triggerScan}) and default to the last 7 days when omitted.
  */
 public class BidScanWindow {
 

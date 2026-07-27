@@ -1,5 +1,7 @@
 import { apiClient, type ApiResponse } from './client'
 
+export const MAX_KEYWORDS = 15
+
 export interface BidKeyword {
   id: number
   keyword: string
@@ -15,21 +17,19 @@ export interface BidNotice {
   deadline: string | null
   url: string | null
   eligibilityScore: number | null
+  aiSummary: string | null
   aiJudgement: string | null
   status: 'ELIGIBLE' | 'INELIGIBLE'
   crawledAt: string
 }
 
-export interface BidWindow {
-  windowStart: string
-  windowEnd: string
-  notices: BidNotice[]
-}
-
 export interface BidScanSummary {
   fetched: number
+  matched: number
   newNotices: number
   eligibleCount: number
+  rangeStart: string
+  rangeEnd: string
 }
 
 export async function listKeywords(): Promise<BidKeyword[]> {
@@ -46,13 +46,20 @@ export async function removeKeyword(id: number): Promise<void> {
   await apiClient.delete(`/api/bids/keywords/${id}`)
 }
 
-/** 어제 오전 10시 ~ 오늘 오전 10시 사이 감지된 적격 공고 */
-export async function fetchEligibleWindow(): Promise<BidWindow> {
-  const { data } = await apiClient.get<ApiResponse<BidWindow>>('/api/bids/eligible')
+/** 최근 감지된 적격 공고 (최대 50건, 최신순) */
+export async function fetchRecentEligible(): Promise<BidNotice[]> {
+  const { data } = await apiClient.get<ApiResponse<BidNotice[]>>('/api/bids/eligible')
   return data.data
 }
 
-export async function scanNow(): Promise<BidScanSummary> {
-  const { data } = await apiClient.post<ApiResponse<BidScanSummary>>('/api/bids/scan-now')
+export async function fetchBidDetail(id: number): Promise<BidNotice> {
+  const { data } = await apiClient.get<ApiResponse<BidNotice>>(`/api/bids/${id}`)
+  return data.data
+}
+
+/** startDate/endDate 둘 다 비우면 서버 기본값(최근 7일)을 사용 */
+export async function scanNow(startDate?: string, endDate?: string): Promise<BidScanSummary> {
+  const body = startDate && endDate ? { startDate, endDate } : {}
+  const { data } = await apiClient.post<ApiResponse<BidScanSummary>>('/api/bids/scan-now', body)
   return data.data
 }
