@@ -1,19 +1,27 @@
 import { useState } from 'react'
+import { isAxiosError } from 'axios'
 import FileUploader from '../components/FileUploader'
 import { uploadFile } from '../api/files'
 import { analyzeRequirements, zipDownloadUrl, type EvidenceAnalysisResult } from '../api/evidence'
+import type { ApiResponse } from '../api/client'
 
 export default function EvidencePage() {
   const [result, setResult] = useState<EvidenceAnalysisResult | null>(null)
   const [isAnalyzing, setIsAnalyzing] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleFileSelected(files: File[]) {
     const file = files[0]
     if (!file) return
     setIsAnalyzing(true)
+    setError(null)
+    setResult(null)
     try {
       const uploaded = await uploadFile(file, 'REQUIREMENT_DOC')
       setResult(await analyzeRequirements(uploaded.id))
+    } catch (err) {
+      const serverMessage = isAxiosError<ApiResponse<unknown>>(err) ? err.response?.data?.message : null
+      setError(serverMessage || '업로드 또는 분석 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.')
     } finally {
       setIsAnalyzing(false)
     }
@@ -38,12 +46,19 @@ export default function EvidencePage() {
             <FileUploader onFilesSelected={handleFileSelected} accept=".docx,.pdf,.hwp,.hwpx" multiple={false} />
           </div>
           {isAnalyzing && <p className="mt-4 animate-pulse text-xs text-muted">— 분석 중 —</p>}
+          {error && <p className="mt-4 text-sm text-pending">{error}</p>}
         </section>
 
         <section className="rounded-lg border border-hairline bg-navy-900 p-6">
           <h2 className="text-sm font-semibold text-offwhite">매칭 결과</h2>
-          {!result && <p className="mt-4 text-sm text-muted">아직 분석된 요건이 없습니다.</p>}
-          {result && (
+          {!result && !error && <p className="mt-4 text-sm text-muted">아직 분석된 요건이 없습니다.</p>}
+          {result && result.status === 'FAILED' && (
+            <p className="mt-4 text-sm text-pending">
+              공고문에서 제출서류 목록을 추출하지 못했습니다. 텍스트 추출이 가능한 파일(.docx, .pdf 등)인지
+              확인해주세요 — .hwp는 환경에 따라 텍스트 추출이 안 될 수 있습니다.
+            </p>
+          )}
+          {result && result.status !== 'FAILED' && (
             <div className="mt-4 space-y-6">
               <div>
                 <div className="flex items-center justify-between">
