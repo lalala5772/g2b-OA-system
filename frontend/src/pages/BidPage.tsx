@@ -136,6 +136,13 @@ export default function BidPage() {
               <br />
               조회 {summary.fetched}건 · 매칭 {summary.matched}건 · 신규 {summary.newNotices}건 · 적격{' '}
               {summary.eligibleCount}건
+              {summary.matched > 0 && (
+                <>
+                  <br />
+                  AI 판단 완료 {summary.judged}건 · 판단 보류 {summary.unjudged}건
+                  {summary.unjudged > 0 && ' (AI 호출 실패 또는 회사 자료 부족 — 크레딧/API 키 확인 필요)'}
+                </>
+              )}
             </p>
           )}
         </section>

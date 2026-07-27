@@ -176,6 +176,7 @@ def scan(
     skipped = matched[MAX_JUDGED:]
 
     results = []
+    judged_count = 0
     with ThreadPoolExecutor(max_workers=5) as executor:
         future_to_item = {
             executor.submit(
@@ -186,6 +187,8 @@ def scan(
         for future in as_completed(future_to_item):
             item, keyword = future_to_item[future]
             score, summary, reason = future.result()
+            if score is not None:
+                judged_count += 1
             eligible = (score or 0) >= eligibility_threshold
             results.append(_build_result(item, keyword, score, summary, reason, eligible))
 
@@ -199,4 +202,11 @@ def scan(
         "fetched": len(items),
         "range_start": begin.date().isoformat(),
         "range_end": end.date().isoformat(),
+        # A score is only ever None when a notice wasn't judged (call failed, no company
+        # profile, or the MAX_JUDGED cap was hit) — a completed judgment always has a score,
+        # even a low one. So matched-judged_count surfaces failures instead of hiding them
+        # behind an empty eligible list, which is exactly what made a Claude billing outage
+        # look identical to "this company's domain doesn't fit any of these keywords."
+        "judged": judged_count,
+        "unjudged": len(matched) - judged_count,
     }

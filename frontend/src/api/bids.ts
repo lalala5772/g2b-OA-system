@@ -28,6 +28,8 @@ export interface BidScanSummary {
   matched: number
   newNotices: number
   eligibleCount: number
+  judged: number
+  unjudged: number
   rangeStart: string
   rangeEnd: string
 }

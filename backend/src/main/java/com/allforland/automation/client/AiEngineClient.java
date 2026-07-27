@@ -66,7 +66,9 @@ public class AiEngineClient {
 					response.results(),
 					response.fetched(),
 					LocalDate.parse(response.rangeStart()),
-					LocalDate.parse(response.rangeEnd()));
+					LocalDate.parse(response.rangeEnd()),
+					response.judged(),
+					response.unjudged());
 		} catch (Exception ex) {
 			return BidScanOutcome.empty(startDate, endDate);
 		}
@@ -84,7 +86,9 @@ public class AiEngineClient {
 			List<BidScanResult> results,
 			int fetched,
 			@JsonProperty("range_start") String rangeStart,
-			@JsonProperty("range_end") String rangeEnd) {
+			@JsonProperty("range_end") String rangeEnd,
+			int judged,
+			int unjudged) {
 	}
 
 	public byte[] fillDocument(byte[] templateBytes, String templateFilename, Map<String, String> fieldValues) {

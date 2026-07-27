@@ -34,6 +34,8 @@ class ScanResponse(BaseModel):
     fetched: int
     range_start: str
     range_end: str
+    judged: int
+    unjudged: int
 
 
 def verify_api_key(x_api_key: str) -> None:
@@ -57,4 +59,6 @@ def scan(payload: ScanRequest, x_api_key: str = Header(default="")) -> ScanRespo
         fetched=outcome["fetched"],
         range_start=outcome["range_start"],
         range_end=outcome["range_end"],
+        judged=outcome["judged"],
+        unjudged=outcome["unjudged"],
     )

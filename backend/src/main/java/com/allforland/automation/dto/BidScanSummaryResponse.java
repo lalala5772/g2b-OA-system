@@ -7,6 +7,8 @@ public record BidScanSummaryResponse(
 		int matched,
 		int newNotices,
 		int eligibleCount,
+		int judged,
+		int unjudged,
 		LocalDate rangeStart,
 		LocalDate rangeEnd) {
 }

@@ -16,6 +16,7 @@ import com.allforland.automation.repository.CompanyFileRepository;
 import com.allforland.automation.service.BidService;
 import java.time.LocalDate;
 import java.time.format.DateTimeParseException;
+import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
@@ -25,7 +26,7 @@ import org.springframework.transaction.annotation.Transactional;
 @Service
 public class BidServiceImpl implements BidService {
 
-	private static final int COMPANY_PROFILE_MAX_CHARS = 4000;
+	private static final int COMPANY_PROFILE_MAX_CHARS = 8000;
 	private static final int MAX_KEYWORDS = 15;
 
 	private final BidKeywordRepository bidKeywordRepository;
@@ -54,7 +55,7 @@ public class BidServiceImpl implements BidService {
 				.map(BidKeyword::getKeyword)
 				.toList();
 		if (keywords.isEmpty()) {
-			return new BidScanSummaryResponse(0, 0, 0, 0, startDate, endDate);
+			return new BidScanSummaryResponse(0, 0, 0, 0, 0, 0, startDate, endDate);
 		}
 
 		String companyProfile = buildCompanyProfile();
@@ -88,7 +89,14 @@ public class BidServiceImpl implements BidService {
 		}
 
 		return new BidScanSummaryResponse(
-				outcome.fetched(), outcome.results().size(), newCount, eligibleCount, outcome.rangeStart(), outcome.rangeEnd());
+				outcome.fetched(),
+				outcome.results().size(),
+				newCount,
+				eligibleCount,
+				outcome.judged(),
+				outcome.unjudged(),
+				outcome.rangeStart(),
+				outcome.rangeEnd());
 	}
 
 	@Override
@@ -130,8 +138,12 @@ public class BidServiceImpl implements BidService {
 	}
 
 	private String buildCompanyProfile() {
+		// CERTIFICATE files are short and high-signal (특허/인증 등급), so they go first —
+		// if the combined text still exceeds the cap, it's the long DOMAIN_INTRO narrative
+		// that gets truncated, not the certificates.
 		String profile = companyFileRepository.findAll().stream()
 				.filter(file -> file.getCategory() == FileCategory.DOMAIN_INTRO || file.getCategory() == FileCategory.CERTIFICATE)
+				.sorted(Comparator.comparing(file -> file.getCategory() == FileCategory.CERTIFICATE ? 0 : 1))
 				.map(file -> file.getExtractedText() == null ? "" : file.getExtractedText())
 				.collect(Collectors.joining("\n\n"));
 		return profile.length() > COMPANY_PROFILE_MAX_CHARS ? profile.substring(0, COMPANY_PROFILE_MAX_CHARS) : profile;
