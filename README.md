@@ -1,4 +1,4 @@
-# g2b-OA-system
+# b2g-OA-system
 
 업무 자동화 플랫폼 — Spring Boot(핵심 서비스) + FastAPI(AI/문서 엔진) + React 하이브리드 구조.
 

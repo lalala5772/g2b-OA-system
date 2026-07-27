@@ -32,7 +32,7 @@ export default function Layout() {
       <header className="sticky top-0 z-10 border-b border-hairline bg-navy-950/90 backdrop-blur">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <NavLink to="/dashboard" className="font-serif text-lg tracking-wide text-offwhite">
-            G2B — Automation
+            B2G — Automation
           </NavLink>
           <nav className="flex items-center gap-8 text-sm text-muted">
             {NAV_ITEMS.map((item) => (

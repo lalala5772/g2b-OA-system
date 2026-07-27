@@ -15,7 +15,7 @@ export default function LoginPage() {
       />
 
       <span className="absolute left-8 top-8 font-serif text-xl tracking-wide text-offwhite md:left-12 md:top-10">
-        G2B — Automation
+        B2G — Automation
       </span>
 
       <p className="relative text-xs font-medium tracking-[0.4em] text-muted">

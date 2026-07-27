@@ -4,7 +4,7 @@ server:
 
 spring:
   application:
-    name: g2b-oa-backend
+    name: b2g-oa-backend
   datasource:
     url: jdbc:postgresql://${DB_HOST:localhost}:${DB_PORT:5432}/${DB_NAME:g2b_oa}
     username: ${DB_USERNAME:g2b_oa}
