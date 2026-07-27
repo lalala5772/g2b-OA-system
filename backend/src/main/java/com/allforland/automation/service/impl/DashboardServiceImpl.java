@@ -6,7 +6,7 @@ import com.allforland.automation.dto.DashboardSummaryResponse;
 import com.allforland.automation.dto.DashboardSummaryResponse.FeatureStatus;
 import com.allforland.automation.repository.BidNoticeRepository;
 import com.allforland.automation.repository.CompanyFileRepository;
-import com.allforland.automation.repository.DocumentTemplateRepository;
+import com.allforland.automation.repository.DocumentGenerationRepository;
 import com.allforland.automation.repository.ZipExportRepository;
 import com.allforland.automation.service.DashboardService;
 import java.util.LinkedHashMap;
@@ -18,17 +18,17 @@ public class DashboardServiceImpl implements DashboardService {
 
 	private final CompanyFileRepository companyFileRepository;
 	private final BidNoticeRepository bidNoticeRepository;
-	private final DocumentTemplateRepository documentTemplateRepository;
+	private final DocumentGenerationRepository documentGenerationRepository;
 	private final ZipExportRepository zipExportRepository;
 
 	public DashboardServiceImpl(
 			CompanyFileRepository companyFileRepository,
 			BidNoticeRepository bidNoticeRepository,
-			DocumentTemplateRepository documentTemplateRepository,
+			DocumentGenerationRepository documentGenerationRepository,
 			ZipExportRepository zipExportRepository) {
 		this.companyFileRepository = companyFileRepository;
 		this.bidNoticeRepository = bidNoticeRepository;
-		this.documentTemplateRepository = documentTemplateRepository;
+		this.documentGenerationRepository = documentGenerationRepository;
 		this.zipExportRepository = zipExportRepository;
 	}
 
@@ -43,8 +43,8 @@ public class DashboardServiceImpl implements DashboardService {
 		long eligibleCount = bidNoticeRepository.countByStatus(BidNoticeStatus.ELIGIBLE);
 		FeatureStatus bidStatus = new FeatureStatus("available", eligibleCount + "건 적격 공고 감지");
 
-		long templateCount = documentTemplateRepository.count();
-		FeatureStatus documentStatus = new FeatureStatus("available", templateCount + "개 템플릿 등록됨");
+		long generationCount = documentGenerationRepository.count();
+		FeatureStatus documentStatus = new FeatureStatus("available", generationCount + "건 문서 자동 채움 완료");
 
 		long zipCount = zipExportRepository.count();
 		FeatureStatus evidenceStatus = new FeatureStatus("available", zipCount + "건 증빙 매칭 완료");

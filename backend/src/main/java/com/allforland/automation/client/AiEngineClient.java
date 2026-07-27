@@ -1,9 +1,9 @@
 package com.allforland.automation.client;
 
 import com.fasterxml.jackson.annotation.JsonProperty;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.time.Duration;
 import java.time.LocalDate;
+import java.util.Base64;
 import java.util.List;
 import java.util.Map;
 import org.springframework.beans.factory.annotation.Value;
@@ -20,11 +20,9 @@ public class AiEngineClient {
 	private final WebClient webClient;
 	private final Duration timeout;
 	private final Duration longTimeout;
-	private final ObjectMapper objectMapper;
 
 	public AiEngineClient(
 			WebClient.Builder webClientBuilder,
-			ObjectMapper objectMapper,
 			@Value("${ai-engine.base-url}") String baseUrl,
 			@Value("${ai-engine.api-key}") String apiKey,
 			@Value("${ai-engine.timeout-seconds}") long timeoutSeconds,
@@ -33,7 +31,6 @@ public class AiEngineClient {
 				.baseUrl(baseUrl)
 				.defaultHeader("X-API-Key", apiKey)
 				.build();
-		this.objectMapper = objectMapper;
 		this.timeout = Duration.ofSeconds(timeoutSeconds);
 		this.longTimeout = Duration.ofSeconds(longTimeoutSeconds);
 	}
@@ -91,59 +88,41 @@ public class AiEngineClient {
 			int unjudged) {
 	}
 
-	public byte[] fillDocument(byte[] templateBytes, String templateFilename, Map<String, String> fieldValues) {
+	public AutoFillOutcome autoFillDocument(byte[] fileBytes, String filename, String companyText) {
 		MultipartBodyBuilder builder = new MultipartBodyBuilder();
-		builder.part("template", new ByteArrayResource(templateBytes) {
+		builder.part("file", new ByteArrayResource(fileBytes) {
 			@Override
 			public String getFilename() {
-				return templateFilename;
+				return filename;
 			}
 		});
-		builder.part("field_values", writeJson(fieldValues));
+		builder.part("company_text", companyText);
 
 		try {
-			return webClient.post()
-					.uri("/documents/fill")
+			AutoFillResponse response = webClient.post()
+					.uri("/documents/auto-fill")
 					.contentType(MediaType.MULTIPART_FORM_DATA)
 					.bodyValue(builder.build())
 					.retrieve()
-					.bodyToMono(byte[].class)
+					.bodyToMono(AutoFillResponse.class)
 					.timeout(longTimeout)
 					.block();
+			if (response == null) {
+				return new AutoFillOutcome(null, Map.of());
+			}
+			return new AutoFillOutcome(
+					Base64.getDecoder().decode(response.filledDocumentBase64()), response.filledFields());
 		} catch (Exception ex) {
-			return null;
+			return new AutoFillOutcome(null, Map.of());
 		}
 	}
 
-	public Map<String, String> extractFields(String companyText, List<String> fieldKeys) {
-		try {
-			ExtractFieldsResponse response = webClient.post()
-					.uri("/documents/extract-fields")
-					.contentType(MediaType.APPLICATION_JSON)
-					.bodyValue(new ExtractFieldsRequest(companyText, fieldKeys))
-					.retrieve()
-					.bodyToMono(ExtractFieldsResponse.class)
-					.timeout(longTimeout)
-					.block();
-			return response == null ? Map.of() : response.fields();
-		} catch (Exception ex) {
-			return Map.of();
-		}
+	public record AutoFillOutcome(byte[] filledDocument, Map<String, String> filledFields) {
 	}
 
-	private String writeJson(Object value) {
-		try {
-			return objectMapper.writeValueAsString(value);
-		} catch (Exception ex) {
-			return "{}";
-		}
-	}
-
-	private record ExtractFieldsRequest(
-			@JsonProperty("company_text") String companyText, @JsonProperty("field_keys") List<String> fieldKeys) {
-	}
-
-	private record ExtractFieldsResponse(Map<String, String> fields) {
+	private record AutoFillResponse(
+			@JsonProperty("filled_document_base64") String filledDocumentBase64,
+			@JsonProperty("filled_fields") Map<String, String> filledFields) {
 	}
 
 	public List<Double> embed(String text) {

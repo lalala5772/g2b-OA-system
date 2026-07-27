@@ -26,16 +26,15 @@ public class DocumentGeneration {
 	@GeneratedValue(strategy = GenerationType.IDENTITY)
 	private Long id;
 
-	@ManyToOne(fetch = FetchType.LAZY)
-	@JoinColumn(name = "template_id", nullable = false)
-	private DocumentTemplate template;
+	@Column(name = "original_filename", nullable = false)
+	private String originalFilename;
 
 	@ManyToOne(fetch = FetchType.LAZY)
 	@JoinColumn(name = "user_id", nullable = false)
 	private User user;
 
-	@Column(name = "input_data_json", nullable = false, columnDefinition = "TEXT")
-	private String inputDataJson;
+	@Column(name = "filled_fields_json", nullable = false, columnDefinition = "TEXT")
+	private String filledFieldsJson;
 
 	@Column(name = "output_storage_key")
 	private String outputStorageKey;
@@ -47,10 +46,10 @@ public class DocumentGeneration {
 	@Column(name = "created_at", nullable = false)
 	private Instant createdAt;
 
-	public DocumentGeneration(DocumentTemplate template, User user, String inputDataJson) {
-		this.template = template;
+	public DocumentGeneration(String originalFilename, User user, String filledFieldsJson) {
+		this.originalFilename = originalFilename;
 		this.user = user;
-		this.inputDataJson = inputDataJson;
+		this.filledFieldsJson = filledFieldsJson;
 		this.status = DocumentGenerationStatus.FAILED;
 		this.createdAt = Instant.now();
 	}

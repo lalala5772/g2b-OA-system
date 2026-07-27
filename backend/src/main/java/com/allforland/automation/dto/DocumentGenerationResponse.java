@@ -6,10 +6,10 @@ import java.time.Instant;
 import java.util.Map;
 
 public record DocumentGenerationResponse(
-		Long id, DocumentGenerationStatus status, Map<String, String> autoFilledFields, Instant createdAt) {
+		Long id, DocumentGenerationStatus status, Map<String, String> filledFields, Instant createdAt) {
 
-	public static DocumentGenerationResponse of(DocumentGeneration generation, Map<String, String> autoFilledFields) {
+	public static DocumentGenerationResponse of(DocumentGeneration generation, Map<String, String> filledFields) {
 		return new DocumentGenerationResponse(
-				generation.getId(), generation.getStatus(), autoFilledFields, generation.getCreatedAt());
+				generation.getId(), generation.getStatus(), filledFields, generation.getCreatedAt());
 	}
 }
