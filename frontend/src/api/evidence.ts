@@ -5,7 +5,7 @@ export interface RequiredItem {
   itemName: string
   description: string | null
   matched: boolean
-  confidenceScore: number | null
+  matchReason: string | null
   matchedFileName: string | null
 }
 

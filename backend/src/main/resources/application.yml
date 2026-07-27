@@ -39,8 +39,6 @@ app:
     scan-cron: ${BID_SCAN_CRON:0 0 10 * * *}
     keywords-seed: ${BID_KEYWORDS_SEED:}
     eligibility-threshold: ${BID_ELIGIBILITY_THRESHOLD:0.6}
-  evidence:
-    match-threshold: ${EVIDENCE_MATCH_THRESHOLD:0.5}
 
 ai-engine:
   base-url: ${AI_ENGINE_BASE_URL:http://127.0.0.1:8000}

@@ -1,8 +1,9 @@
 package com.allforland.automation.service.impl;
 
 import com.allforland.automation.client.AiEngineClient;
+import com.allforland.automation.client.AiEngineClient.EvidenceFileCandidate;
+import com.allforland.automation.client.AiEngineClient.EvidenceItemMatch;
 import com.allforland.automation.client.AiEngineClient.RequiredItemSuggestion;
-import com.allforland.automation.common.CosineSimilarity;
 import com.allforland.automation.domain.CompanyFile;
 import com.allforland.automation.domain.FileCategory;
 import com.allforland.automation.domain.RequiredItem;
@@ -20,20 +21,26 @@ import com.allforland.automation.service.EvidenceService;
 import com.allforland.automation.service.FileStorageService;
 import com.allforland.automation.service.UploadedFileService;
 import com.allforland.automation.service.UserService;
-import com.fasterxml.jackson.core.type.TypeReference;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 import java.util.zip.ZipEntry;
 import java.util.zip.ZipOutputStream;
-import org.springframework.beans.factory.annotation.Value;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EvidenceServiceImpl implements EvidenceService {
+
+	private static final Logger log = LoggerFactory.getLogger(EvidenceServiceImpl.class);
+	private static final int EVIDENCE_TEXT_MAX_CHARS = 800;
 
 	private final RequirementSetRepository requirementSetRepository;
 	private final RequiredItemRepository requiredItemRepository;
@@ -43,8 +50,6 @@ public class EvidenceServiceImpl implements EvidenceService {
 	private final UserService userService;
 	private final FileStorageService fileStorageService;
 	private final AiEngineClient aiEngineClient;
-	private final ObjectMapper objectMapper;
-	private final double matchThreshold;
 
 	public EvidenceServiceImpl(
 			RequirementSetRepository requirementSetRepository,
@@ -54,9 +59,7 @@ public class EvidenceServiceImpl implements EvidenceService {
 			UploadedFileService uploadedFileService,
 			UserService userService,
 			FileStorageService fileStorageService,
-			AiEngineClient aiEngineClient,
-			ObjectMapper objectMapper,
-			@Value("${app.evidence.match-threshold}") double matchThreshold) {
+			AiEngineClient aiEngineClient) {
 		this.requirementSetRepository = requirementSetRepository;
 		this.requiredItemRepository = requiredItemRepository;
 		this.zipExportRepository = zipExportRepository;
@@ -65,8 +68,6 @@ public class EvidenceServiceImpl implements EvidenceService {
 		this.userService = userService;
 		this.fileStorageService = fileStorageService;
 		this.aiEngineClient = aiEngineClient;
-		this.objectMapper = objectMapper;
-		this.matchThreshold = matchThreshold;
 	}
 
 	@Override
@@ -91,15 +92,36 @@ public class EvidenceServiceImpl implements EvidenceService {
 		List<CompanyFile> evidenceFiles = companyFileRepository
 				.findAllByCategoryOrderByUploadedAtDesc(FileCategory.EVIDENCE)
 				.stream()
-				.filter(file -> file.getEmbedding() != null)
+				.filter(file -> file.getExtractedText() != null)
 				.toList();
 
+		List<EvidenceItemMatch> matches = aiEngineClient.matchEvidenceItems(
+				suggestions,
+				evidenceFiles.stream()
+						.map(file -> new EvidenceFileCandidate(file.getId(), file.getFileName(), truncate(file.getExtractedText())))
+						.toList());
+
+		Map<Long, CompanyFile> evidenceById = new HashMap<>();
+		for (CompanyFile file : evidenceFiles) {
+			evidenceById.put(file.getId(), file);
+		}
+
 		List<RequiredItem> items = new ArrayList<>();
-		for (RequiredItemSuggestion suggestion : suggestions) {
-			RequiredItem item = requiredItemRepository.save(
-					new RequiredItem(requirementSet, suggestion.name(), suggestion.description()));
-			matchAgainstEvidence(item, evidenceFiles);
-			items.add(item);
+		for (int i = 0; i < suggestions.size(); i++) {
+			RequiredItemSuggestion suggestion = suggestions.get(i);
+			RequiredItem item = new RequiredItem(requirementSet, suggestion.name(), suggestion.description());
+
+			EvidenceItemMatch match = i < matches.size() ? matches.get(i) : null;
+			CompanyFile matchedFile = match != null && match.evidenceFileId() != null
+					? evidenceById.get(match.evidenceFileId())
+					: null;
+			if (matchedFile != null) {
+				item.applyMatch(matchedFile, match.reason());
+			} else if (match != null) {
+				item.markUnmatched(match.reason());
+			}
+
+			items.add(requiredItemRepository.save(item));
 		}
 
 		ZipExport zipExport = buildZipExport(requirementSet, items);
@@ -117,27 +139,11 @@ public class EvidenceServiceImpl implements EvidenceService {
 				missingCount);
 	}
 
-	private void matchAgainstEvidence(RequiredItem item, List<CompanyFile> evidenceFiles) {
-		String queryText = item.getItemName() + " " + (item.getDescription() == null ? "" : item.getDescription());
-		List<Double> queryVector = aiEngineClient.embed(queryText);
-		if (queryVector.isEmpty()) {
-			return;
+	private String truncate(String text) {
+		if (text == null) {
+			return "";
 		}
-
-		CompanyFile bestMatch = null;
-		double bestScore = 0.0;
-		for (CompanyFile candidate : evidenceFiles) {
-			List<Double> candidateVector = parseEmbedding(candidate.getEmbedding());
-			double score = CosineSimilarity.of(queryVector, candidateVector);
-			if (score > bestScore) {
-				bestScore = score;
-				bestMatch = candidate;
-			}
-		}
-
-		if (bestMatch != null && bestScore >= matchThreshold) {
-			item.applyMatch(bestMatch, bestScore);
-		}
+		return text.length() > EVIDENCE_TEXT_MAX_CHARS ? text.substring(0, EVIDENCE_TEXT_MAX_CHARS) : text;
 	}
 
 	private ZipExport buildZipExport(RequirementSet requirementSet, List<RequiredItem> items) {
@@ -151,8 +157,13 @@ public class EvidenceServiceImpl implements EvidenceService {
 
 		try (ByteArrayOutputStream buffer = new ByteArrayOutputStream();
 				ZipOutputStream zip = new ZipOutputStream(buffer)) {
+			// Matching already dedupes one-file-per-item, but two distinct CompanyFile rows could
+			// still share the exact same file_name — guard the zip entry names too so that case
+			// can never silently kill the whole export again (it did, via a duplicate-entry
+			// IOException that a bare try/catch swallowed without a trace).
+			Set<String> usedNames = new HashSet<>();
 			for (CompanyFile file : matchedFiles) {
-				zip.putNextEntry(new ZipEntry(file.getFileName()));
+				zip.putNextEntry(new ZipEntry(uniqueEntryName(file.getFileName(), usedNames)));
 				zip.write(fileStorageService.load(file.getStorageKey()));
 				zip.closeEntry();
 			}
@@ -162,16 +173,29 @@ public class EvidenceServiceImpl implements EvidenceService {
 			int missingCount = items.size() - matchedFiles.size();
 			return zipExportRepository.save(new ZipExport(requirementSet, storageKey, matchedFiles.size(), missingCount));
 		} catch (IOException e) {
+			log.error("증빙자료 ZIP 생성 실패 (requirementSetId={})", requirementSet.getId(), e);
 			return null;
 		}
 	}
 
-	private List<Double> parseEmbedding(String json) {
-		try {
-			return objectMapper.readValue(json, new TypeReference<List<Double>>() {});
-		} catch (Exception e) {
-			return List.of();
+	private String uniqueEntryName(String fileName, Set<String> usedNames) {
+		if (usedNames.add(fileName)) {
+			return fileName;
 		}
+		String base = fileName;
+		String extension = "";
+		int dot = fileName.lastIndexOf('.');
+		if (dot > 0) {
+			base = fileName.substring(0, dot);
+			extension = fileName.substring(dot);
+		}
+		String candidate;
+		int counter = 2;
+		do {
+			candidate = base + "(" + counter + ")" + extension;
+			counter++;
+		} while (!usedNames.add(candidate));
+		return candidate;
 	}
 
 	@Override

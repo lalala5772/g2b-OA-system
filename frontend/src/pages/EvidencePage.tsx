@@ -61,9 +61,7 @@ export default function EvidencePage() {
                   {matchedItems.map((item) => (
                     <li key={item.id}>
                       {item.itemName} — {item.matchedFileName}
-                      {item.confidenceScore != null && (
-                        <span className="text-xs text-muted"> ({item.confidenceScore.toFixed(2)})</span>
-                      )}
+                      {item.matchReason && <span className="block text-xs text-muted">{item.matchReason}</span>}
                     </li>
                   ))}
                   {matchedItems.length === 0 && <li className="text-xs text-muted">없음</li>}
@@ -75,7 +73,7 @@ export default function EvidencePage() {
                 <ul className="mt-2 space-y-1 text-sm text-muted">
                   {missingItems.map((item) => (
                     <li key={item.id}>
-                      {item.itemName} — {item.description || '해당하는 문서를 찾지 못했습니다.'}
+                      {item.itemName} — {item.matchReason || item.description || '해당하는 문서를 찾지 못했습니다.'}
                     </li>
                   ))}
                   {missingItems.length === 0 && <li className="text-xs text-muted">없음</li>}

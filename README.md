@@ -31,7 +31,6 @@ cp frontend/.env.example frontend/.env
 - `AI_ENGINE_API_KEY` — 위와 동일한 값
 - `CLAUDE_API_KEY` / `CLAUDE_MODEL` — 나라장터 적격판단·문서 필드 자동추출·증빙 요건 추출에 사용
 - `NARAJANGTEO_SERVICE_KEY` — 나라장터 Open API **디코딩키**(인코딩키 아님 — 인코딩키를 넣으면 이중 인코딩되어 인증 오류가 납니다)
-- `EMBEDDING_MODEL` — 기본값 그대로 두면 됩니다(로컬 sentence-transformers, API 키 불필요)
 
 Claude/나라장터 키가 없어도 앱은 정상적으로 뜨고, 해당 기능만 "결과 없음"으로 정직하게 응답합니다(크래시하지 않음).
 
@@ -56,7 +55,6 @@ python3 -m venv .venv && source .venv/bin/activate
 pip install -r requirements.txt
 uvicorn app.main:app --reload --port 8000
 ```
-> 첫 회사 자료실 "증빙서류" 업로드 시 로컬 임베딩 모델을 최초 1회 다운로드합니다(수십 초 소요, 이후 캐시됨).
 
 ### 3. Backend (Spring Boot)
 ```bash
@@ -76,7 +74,7 @@ npm run dev
 - **Phase 1**: Google OAuth2 로그인, 대시보드 허브, 회사 자료실(업로드/파싱/목록/삭제) — 업로드는 왼쪽에서 선택한 카테고리로만 들어갑니다(목록 필터와 업로드 대상이 동일한 상태를 공유)
 - **Phase 2**: 나라장터 자동화 — 키워드 최대 15개 등록, 자동 스캔(`@Scheduled`, 매일 직전 24시간) + 수동 실행(날짜범위 직접 지정, 비우면 최근 7일), 날짜범위 페이지네이션을 병렬 조회 후 키워드로 매칭, AI 적격판단(적합도 + 요약 + 추천 이유). 공고 클릭 시 게시글형 상세 페이지에서 AI 요약/추천 이유/원본 공고문 링크 확인(외부 알림 채널 없음)
 - **Phase 3**: 문서 자동 채우기 — 참가신청서 등 `.docx` 문서를 업로드하면 원본 양식은 그대로 두고 회사자료실(회사소개서·인증서·사업자등록증 등)에서 확인 가능한 정보만 빈칸에 채워서 반환(모르는 항목은 비워둠), 다운로드
-- **Phase 5**: 적격증빙자료 매칭 — 공고문 업로드 → 제출서류 추출 → 자료실 증빙자료와 임베딩 매칭 → ZIP 생성
+- **Phase 5**: 적격증빙자료 매칭 — 공고문 업로드 → 제출서류 추출 → Claude가 회사 증빙자료(회사자료실 "증빙서류" 카테고리)와 실제 서류 종류를 대조해 매칭 → 매칭된 파일 ZIP 생성, 부족한 항목은 사유와 함께 안내
 
 > 아이디어 제안(원래의 Phase 4)은 사용자 요청으로 제거했습니다. `docs/DESIGN.md`에는 원래 설계 내용이 기록으로 남아있습니다.
 
@@ -91,8 +89,7 @@ npm run dev
 Phase 2~5를 구현하며 설계서(`docs/DESIGN.md`) 원안에서 몇 가지를 실용적으로 조정했습니다 — 상세 이유는 문서 하단 참고:
 - 아이디어 제안 기능: **제거** (사용자 요청)
 - 알림 채널: Google Chat → ~~Slack~~ → **제거, 웹페이지에 직접 나열**로 재변경 (사용자 요청)
-- 임베딩: Claude API(임베딩 미제공) → **로컬 sentence-transformers**
-- 벡터 검색: pgvector/FAISS → **단순 코사인 유사도**(회사 자료 규모에서는 충분)
+- 증빙자료 매칭: ~~로컬 sentence-transformers 임베딩 + 코사인 유사도~~ → **Claude가 항목·파일 전체를 직접 비교 판단**으로 재변경 (임베딩 유사도가 서로 다른 서류 종류를 구분 못 해 오매칭이 발생 — 사용자 신고로 발견)
 
 ## 보안 메모
 - 실제 비밀정보(OAuth secret, API 키)는 `*.example` 템플릿만 커밋되고 실값은 로컬 `.env`/`application-local.yml`에만 존재합니다(`.gitignore` 처리).

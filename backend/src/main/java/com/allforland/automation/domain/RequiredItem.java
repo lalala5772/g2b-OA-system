@@ -39,8 +39,9 @@ public class RequiredItem {
 	@JoinColumn(name = "matched_company_file_id")
 	private CompanyFile matchedCompanyFile;
 
-	@Column(name = "confidence_score")
-	private Double confidenceScore;
+	/** Claude's one-sentence explanation — why this file matched, or why nothing did. */
+	@Column(name = "match_reason", columnDefinition = "TEXT")
+	private String matchReason;
 
 	public RequiredItem(RequirementSet requirementSet, String itemName, String description) {
 		this.requirementSet = requirementSet;
@@ -49,9 +50,14 @@ public class RequiredItem {
 		this.matched = false;
 	}
 
-	public void applyMatch(CompanyFile companyFile, double confidenceScore) {
+	public void applyMatch(CompanyFile companyFile, String reason) {
 		this.matchedCompanyFile = companyFile;
-		this.confidenceScore = confidenceScore;
 		this.matched = true;
+		this.matchReason = reason;
+	}
+
+	public void markUnmatched(String reason) {
+		this.matched = false;
+		this.matchReason = reason;
 	}
 }

@@ -50,10 +50,6 @@ public class CompanyFile {
 	@Column(name = "parse_status", nullable = false)
 	private ParseStatus parseStatus = ParseStatus.PENDING;
 
-	/** JSON-encoded float array, populated only for category=EVIDENCE. Used for cosine-similarity matching (Phase 5). */
-	@Column(name = "embedding", columnDefinition = "TEXT")
-	private String embedding;
-
 	@Column(name = "uploaded_at", nullable = false)
 	private Instant uploadedAt;
 
@@ -74,9 +70,5 @@ public class CompanyFile {
 
 	public void markParseFailed() {
 		this.parseStatus = ParseStatus.FAILED;
-	}
-
-	public void setEmbedding(String embedding) {
-		this.embedding = embedding;
 	}
 }

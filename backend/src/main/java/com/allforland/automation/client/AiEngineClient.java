@@ -125,25 +125,6 @@ public class AiEngineClient {
 			@JsonProperty("filled_fields") Map<String, String> filledFields) {
 	}
 
-	public List<Double> embed(String text) {
-		try {
-			EmbedResponse response = webClient.post()
-					.uri("/embeddings/encode")
-					.contentType(MediaType.APPLICATION_JSON)
-					.bodyValue(Map.of("text", text))
-					.retrieve()
-					.bodyToMono(EmbedResponse.class)
-					.timeout(timeout)
-					.block();
-			return response == null ? List.of() : response.embedding();
-		} catch (Exception ex) {
-			return List.of();
-		}
-	}
-
-	private record EmbedResponse(List<Double> embedding) {
-	}
-
 	public List<RequiredItemSuggestion> extractRequirements(String requirementText) {
 		try {
 			RequirementsResponse response = webClient.post()
@@ -164,6 +145,43 @@ public class AiEngineClient {
 	}
 
 	public record RequiredItemSuggestion(String name, String description) {
+	}
+
+	/**
+	 * Hands Claude the full text of both lists so it judges real document-type equivalence
+	 * (e.g. 사업자등록증 vs 중소기업확인서) instead of a bare cosine-similarity score, which is
+	 * what previously let two different required items get matched to the same file.
+	 */
+	public List<EvidenceItemMatch> matchEvidenceItems(
+			List<RequiredItemSuggestion> items, List<EvidenceFileCandidate> evidenceFiles) {
+		try {
+			MatchItemsResponse response = webClient.post()
+					.uri("/evidence/match-items")
+					.contentType(MediaType.APPLICATION_JSON)
+					.bodyValue(new MatchItemsRequest(items, evidenceFiles))
+					.retrieve()
+					.bodyToMono(MatchItemsResponse.class)
+					.timeout(longTimeout)
+					.block();
+			return response == null ? List.of() : response.matches();
+		} catch (Exception ex) {
+			return List.of();
+		}
+	}
+
+	public record EvidenceFileCandidate(
+			Long id, String filename, @JsonProperty("text") String text) {
+	}
+
+	public record EvidenceItemMatch(
+			@JsonProperty("evidence_file_id") Long evidenceFileId, String reason) {
+	}
+
+	private record MatchItemsRequest(
+			List<RequiredItemSuggestion> items, @JsonProperty("evidence_files") List<EvidenceFileCandidate> evidenceFiles) {
+	}
+
+	private record MatchItemsResponse(List<EvidenceItemMatch> matches) {
 	}
 
 	public FileParseResult parseFile(byte[] content, String filename) {
