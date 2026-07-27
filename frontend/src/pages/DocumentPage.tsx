@@ -29,19 +29,24 @@ export default function DocumentPage() {
         <section className="rounded-lg border border-hairline bg-navy-900 p-6">
           <h2 className="text-sm font-semibold text-offwhite">문서 업로드</h2>
           <p className="mt-1 text-xs text-muted">.docx 파일만 지원합니다.</p>
-          <input
-            type="file"
-            accept=".docx"
-            onChange={(e) => {
-              setFile(e.target.files?.[0] ?? null)
-              setResult(null)
-            }}
-            className="mt-4 block text-xs text-muted"
-          />
+
+          <label className="btn-premium mt-4 flex w-full cursor-pointer items-center justify-center gap-2 rounded-full border-2 border-accent bg-accent-soft px-6 py-3 text-sm font-semibold tracking-wide text-accent hover:bg-accent hover:text-navy-900">
+            <input
+              type="file"
+              accept=".docx"
+              onChange={(e) => {
+                setFile(e.target.files?.[0] ?? null)
+                setResult(null)
+              }}
+              className="hidden"
+            />
+            {file ? file.name : '파일 선택'}
+          </label>
+
           <button
             onClick={handleAutoFill}
             disabled={!file || isFilling}
-            className="btn-premium mt-6 w-full rounded-full border border-hairline py-2.5 text-sm tracking-wide text-offwhite hover:border-accent hover:text-accent disabled:opacity-50"
+            className="btn-premium mt-4 w-full rounded-full border border-hairline py-2.5 text-sm tracking-wide text-offwhite hover:border-accent hover:text-accent disabled:opacity-50"
           >
             {isFilling ? '채우는 중…' : '자동 채우기 실행'}
           </button>
@@ -70,7 +75,7 @@ export default function DocumentPage() {
               {result.status === 'SUCCESS' && (
                 <a
                   href={downloadUrl(result.id)}
-                  className="btn-premium inline-block rounded-full border border-hairline px-5 py-2 text-sm tracking-wide text-offwhite hover:border-accent hover:text-accent"
+                  className="btn-premium inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-semibold tracking-wide text-navy-900 shadow-sm hover:brightness-110"
                 >
                   다운로드
                 </a>

@@ -4,7 +4,7 @@ import { useEffect, useRef } from 'react'
  * Animated geospatial-radar background for the login hero — a slow lat/long
  * grid drift, range rings, a rotating sweep, and occasional "ping" blips
  * standing in for 공고 탐지 (a new bid notice being detected). Colors mirror
- * the CSS tokens in index.css (accent #d8c8a8 / offwhite #f3efe6) rather than
+ * the CSS tokens in index.css (accent #a5762e / offwhite #2b241a) rather than
  * reading them at runtime, to keep the draw loop simple.
  */
 export default function RadarField() {
@@ -38,7 +38,7 @@ export default function RadarField() {
     function drawGrid(t: number) {
       if (!ctx) return
       ctx.save()
-      ctx.strokeStyle = 'rgba(243,239,230,0.05)'
+      ctx.strokeStyle = 'rgba(43,36,26,0.06)'
       ctx.lineWidth = 1
       const spacing = 64
       const offset = (t * 0.006) % spacing
@@ -60,7 +60,7 @@ export default function RadarField() {
     function drawRings() {
       if (!ctx) return
       ctx.save()
-      ctx.strokeStyle = 'rgba(216,200,168,0.14)'
+      ctx.strokeStyle = 'rgba(165,118,46,0.16)'
       ctx.lineWidth = 1
       for (let i = 1; i <= 4; i++) {
         ctx.beginPath()
@@ -76,8 +76,8 @@ export default function RadarField() {
       ctx.translate(centerX(), centerY())
       ctx.rotate(angle)
       const gradient = ctx.createLinearGradient(0, 0, maxRadius(), 0)
-      gradient.addColorStop(0, 'rgba(216,200,168,0.32)')
-      gradient.addColorStop(1, 'rgba(216,200,168,0)')
+      gradient.addColorStop(0, 'rgba(165,118,46,0.32)')
+      gradient.addColorStop(1, 'rgba(165,118,46,0)')
       ctx.beginPath()
       ctx.moveTo(0, 0)
       ctx.arc(0, 0, maxRadius(), -0.35, 0)
@@ -118,12 +118,12 @@ export default function RadarField() {
         const r = 3 + age * 14
         ctx.save()
         ctx.globalAlpha = 1 - age
-        ctx.strokeStyle = 'rgba(243,239,230,0.8)'
+        ctx.strokeStyle = 'rgba(43,36,26,0.6)'
         ctx.lineWidth = 1.5
         ctx.beginPath()
         ctx.arc(x, y, r, 0, Math.PI * 2)
         ctx.stroke()
-        ctx.fillStyle = 'rgba(243,239,230,0.9)'
+        ctx.fillStyle = 'rgba(165,118,46,0.9)'
         ctx.beginPath()
         ctx.arc(x, y, 2, 0, Math.PI * 2)
         ctx.fill()

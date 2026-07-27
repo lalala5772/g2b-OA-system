@@ -2,27 +2,33 @@
 @import "@fontsource/instrument-serif";
 
 /*
- * Palette shifted from the original navy/blue tone to a warm charcoal +
- * parchment tone (ref: imweb "Cera — Mix" template). Token *names* were kept
- * (navy-*, accent, offwhite, muted, hairline) to avoid touching every
- * className across the app — only the values moved.
+ * Palette shifted from a dark charcoal theme to a bright warm-ivory theme —
+ * the dark version read as too somber. Token *names* were kept (navy-*,
+ * accent, offwhite, muted, hairline) to avoid touching every className
+ * across the app; only the values moved, and the same relative-depth
+ * relationships were preserved (navy-950 stays "one step recessed" from
+ * navy-900, offwhite stays "the primary foreground color", etc.) — just at
+ * the light end of the scale instead of the dark end. So navy-900 is now a
+ * near-white card surface, navy-950 a slightly deeper ivory used for the
+ * page background and recessed input wells, and offwhite is now the primary
+ * (dark) text color rather than a light one.
  */
 @theme {
-  --color-navy-950: #17140f;
-  --color-navy-900: #201c16;
-  --color-navy-800: #2b261e;
-  --color-navy-700: #3a3327;
-  --color-navy-600: #4c4433;
-  --color-hairline: rgba(240, 233, 219, 0.14);
-  --color-offwhite: #f3efe6;
-  --color-muted: #a39a89;
-  --color-accent: #d8c8a8;
-  --color-accent-soft: rgba(216, 200, 168, 0.14);
+  --color-navy-950: #f5efe1;
+  --color-navy-900: #fffcf6;
+  --color-navy-800: #efe6d2;
+  --color-navy-700: #e2d5b8;
+  --color-navy-600: #cbb98f;
+  --color-hairline: rgba(43, 38, 30, 0.14);
+  --color-offwhite: #2b241a;
+  --color-muted: #786b58;
+  --color-accent: #a5762e;
+  --color-accent-soft: rgba(165, 118, 46, 0.12);
 
-  --color-ok: #8faa8b;
-  --color-ok-soft: rgba(143, 170, 139, 0.14);
-  --color-pending: #c99a5b;
-  --color-pending-soft: rgba(201, 154, 91, 0.14);
+  --color-ok: #4f7a4c;
+  --color-ok-soft: rgba(79, 122, 76, 0.12);
+  --color-pending: #a8672a;
+  --color-pending-soft: rgba(168, 103, 42, 0.12);
 
   --font-sans: 'Pretendard Variable', Pretendard, -apple-system, 'Noto Sans KR', system-ui, sans-serif;
   --font-serif: 'Instrument Serif', 'Iowan Old Style', 'Palatino Linotype', Palatino, Georgia, 'Nanum Myeongjo', serif;
@@ -55,21 +61,21 @@ body {
   content: '';
   position: absolute;
   inset: 0;
-  background: linear-gradient(115deg, transparent 30%, rgba(255, 255, 255, 0.14) 50%, transparent 70%);
+  background: linear-gradient(115deg, transparent 30%, rgba(165, 118, 46, 0.18) 50%, transparent 70%);
   transform: translateX(-130%);
   transition: transform 650ms ease;
   pointer-events: none;
 }
 .btn-premium:hover {
   transform: translateY(-1px);
-  box-shadow: 0 10px 30px -14px rgba(216, 200, 168, 0.45);
+  box-shadow: 0 10px 30px -14px rgba(165, 118, 46, 0.35);
 }
 .btn-premium:hover::before {
   transform: translateX(130%);
 }
 .btn-premium:active {
   transform: translateY(0) scale(0.96);
-  box-shadow: 0 4px 14px -10px rgba(216, 200, 168, 0.3);
+  box-shadow: 0 4px 14px -10px rgba(165, 118, 46, 0.22);
   transition-duration: 90ms;
 }
 .btn-premium:disabled {

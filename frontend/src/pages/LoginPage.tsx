@@ -9,8 +9,8 @@ export default function LoginPage() {
         className="pointer-events-none absolute inset-0"
         style={{
           background:
-            'radial-gradient(ellipse 55% 45% at 30% 15%, rgba(23,20,15,0.7), transparent 60%), ' +
-            'radial-gradient(ellipse 70% 60% at 85% 100%, rgba(58,51,39,0.6), transparent 60%)',
+            'radial-gradient(ellipse 55% 45% at 30% 15%, rgba(165,118,46,0.10), transparent 60%), ' +
+            'radial-gradient(ellipse 70% 60% at 85% 100%, rgba(165,118,46,0.08), transparent 60%)',
         }}
       />
 
