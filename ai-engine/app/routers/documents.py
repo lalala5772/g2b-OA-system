@@ -3,15 +3,10 @@ import base64
 from fastapi import APIRouter, Form, Header, HTTPException, UploadFile
 from pydantic import BaseModel
 
-from app.core.config import settings
+from app.core.security import verify_api_key
 from app.services import docx_autofill
 
 router = APIRouter(prefix="/documents", tags=["documents"])
-
-
-def verify_api_key(x_api_key: str) -> None:
-    if x_api_key != settings.ai_engine_api_key:
-        raise HTTPException(status_code=401, detail="유효하지 않은 API 키입니다.")
 
 
 class AutoFillResponse(BaseModel):

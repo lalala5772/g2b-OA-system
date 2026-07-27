@@ -6,5 +6,5 @@ public interface EvidenceService {
 
 	EvidenceAnalysisResponse analyze(Long uploadedFileId, Long userId);
 
-	byte[] downloadZip(Long zipExportId);
+	byte[] downloadZip(Long zipExportId, Long userId);
 }

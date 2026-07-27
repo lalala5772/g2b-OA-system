@@ -186,7 +186,13 @@ def scan(
         }
         for future in as_completed(future_to_item):
             item, keyword = future_to_item[future]
-            score, summary, reason = future.result()
+            try:
+                score, summary, reason = future.result()
+            except Exception:
+                # A judgment call raising something other than anthropic.APIError (already
+                # handled inside llm_client) shouldn't take the whole scan down with it —
+                # same "degrade one item to unjudged" contract as everywhere else here.
+                score, summary, reason = None, None, None
             if score is not None:
                 judged_count += 1
             eligible = (score or 0) >= eligibility_threshold

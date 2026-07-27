@@ -12,6 +12,7 @@ import com.allforland.automation.service.DashboardService;
 import java.util.LinkedHashMap;
 import java.util.Map;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class DashboardServiceImpl implements DashboardService {
@@ -33,6 +34,7 @@ public class DashboardServiceImpl implements DashboardService {
 	}
 
 	@Override
+	@Transactional(readOnly = true)
 	public DashboardSummaryResponse getSummary() {
 		Map<String, Long> byCategory = new LinkedHashMap<>();
 		for (FileCategory category : FileCategory.values()) {

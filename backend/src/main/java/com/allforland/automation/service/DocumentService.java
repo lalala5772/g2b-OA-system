@@ -7,5 +7,5 @@ public interface DocumentService {
 
 	DocumentGenerationResponse autoFill(MultipartFile file, Long userId);
 
-	byte[] downloadGeneration(Long generationId);
+	byte[] downloadGeneration(Long generationId, Long userId);
 }

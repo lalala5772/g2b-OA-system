@@ -34,8 +34,9 @@ public class DocumentController {
 	}
 
 	@GetMapping("/generations/{id}/download")
-	public ResponseEntity<byte[]> download(@PathVariable Long id) {
-		byte[] content = documentService.downloadGeneration(id);
+	public ResponseEntity<byte[]> download(
+			@PathVariable Long id, @AuthenticationPrincipal AuthenticatedPrincipal principal) {
+		byte[] content = documentService.downloadGeneration(id, principal.userId());
 		return ResponseEntity.ok()
 				.contentType(MediaType.APPLICATION_OCTET_STREAM)
 				.header(

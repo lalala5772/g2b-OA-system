@@ -38,8 +38,9 @@ public class EvidenceController {
 	}
 
 	@GetMapping("/exports/{zipExportId}/download")
-	public ResponseEntity<byte[]> download(@PathVariable Long zipExportId) {
-		byte[] content = evidenceService.downloadZip(zipExportId);
+	public ResponseEntity<byte[]> download(
+			@PathVariable Long zipExportId, @AuthenticationPrincipal AuthenticatedPrincipal principal) {
+		byte[] content = evidenceService.downloadZip(zipExportId, principal.userId());
 		return ResponseEntity.ok()
 				.contentType(MediaType.valueOf("application/zip"))
 				.header(

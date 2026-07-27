@@ -1,18 +1,12 @@
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header
 from pydantic import BaseModel
 
-from app.core.config import settings
+from app.core.security import verify_api_key
 from app.services import llm_client
 
 router = APIRouter(prefix="/evidence", tags=["evidence"])
 
 MAX_FILE_TEXT_CHARS = 800
-
-
-def verify_api_key(x_api_key: str) -> None:
-    if x_api_key != settings.ai_engine_api_key:
-        raise HTTPException(status_code=401, detail="유효하지 않은 API 키입니다.")
-
 
 class ExtractRequirementsRequest(BaseModel):
     requirement_text: str

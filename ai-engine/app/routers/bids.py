@@ -1,7 +1,7 @@
-from fastapi import APIRouter, Header, HTTPException
+from fastapi import APIRouter, Header
 from pydantic import BaseModel
 
-from app.core.config import settings
+from app.core.security import verify_api_key
 from app.services import bid_scanner
 
 router = APIRouter(prefix="/bids", tags=["bids"])
@@ -36,11 +36,6 @@ class ScanResponse(BaseModel):
     range_end: str
     judged: int
     unjudged: int
-
-
-def verify_api_key(x_api_key: str) -> None:
-    if x_api_key != settings.ai_engine_api_key:
-        raise HTTPException(status_code=401, detail="유효하지 않은 API 키입니다.")
 
 
 @router.post("/scan", response_model=ScanResponse)

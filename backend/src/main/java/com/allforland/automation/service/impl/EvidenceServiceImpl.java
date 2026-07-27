@@ -75,6 +75,9 @@ public class EvidenceServiceImpl implements EvidenceService {
 	public EvidenceAnalysisResponse analyze(Long uploadedFileId, Long userId) {
 		User user = userService.getById(userId);
 		UploadedFile requirementDoc = uploadedFileService.getById(uploadedFileId);
+		if (!requirementDoc.getUser().getId().equals(userId)) {
+			throw new IllegalArgumentException("파일을 찾을 수 없습니다: " + uploadedFileId);
+		}
 
 		RequirementSet requirementSet = requirementSetRepository.save(new RequirementSet(user, requirementDoc));
 
@@ -200,8 +203,9 @@ public class EvidenceServiceImpl implements EvidenceService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public byte[] downloadZip(Long zipExportId) {
+	public byte[] downloadZip(Long zipExportId, Long userId) {
 		ZipExport zipExport = zipExportRepository.findById(zipExportId)
+				.filter(candidate -> candidate.getRequirementSet().getUser().getId().equals(userId))
 				.orElseThrow(() -> new IllegalArgumentException("압축 파일을 찾을 수 없습니다: " + zipExportId));
 		return fileStorageService.load(zipExport.getStorageKey());
 	}

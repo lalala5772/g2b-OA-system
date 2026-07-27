@@ -75,9 +75,10 @@ public class DocumentServiceImpl implements DocumentService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public byte[] downloadGeneration(Long generationId) {
+	public byte[] downloadGeneration(Long generationId, Long userId) {
 		DocumentGeneration generation = documentGenerationRepository
 				.findById(generationId)
+				.filter(candidate -> candidate.getUser().getId().equals(userId))
 				.orElseThrow(() -> new IllegalArgumentException("생성 결과를 찾을 수 없습니다: " + generationId));
 		if (generation.getOutputStorageKey() == null) {
 			throw new IllegalArgumentException("아직 생성이 완료되지 않았습니다.");

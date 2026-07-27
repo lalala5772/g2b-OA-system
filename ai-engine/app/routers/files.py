@@ -1,7 +1,7 @@
-from fastapi import APIRouter, File, Header, HTTPException, UploadFile
+from fastapi import APIRouter, File, Header, UploadFile
 from pydantic import BaseModel
 
-from app.core.config import settings
+from app.core.security import verify_api_key
 from app.services.file_parser import docx_parser, hwp_parser, pdf_parser
 
 router = APIRouter(prefix="/files", tags=["files"])
@@ -13,11 +13,6 @@ class ParseResponse(BaseModel):
     status: str
     extracted_text: str | None = None
     message: str | None = None
-
-
-def verify_api_key(x_api_key: str = Header(default="")) -> None:
-    if x_api_key != settings.ai_engine_api_key:
-        raise HTTPException(status_code=401, detail="유효하지 않은 API 키입니다.")
 
 
 @router.post("/parse", response_model=ParseResponse, dependencies=[])
