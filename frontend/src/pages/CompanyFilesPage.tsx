@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { isAxiosError } from 'axios'
 import FileUploader from '../components/FileUploader'
 import {
   CATEGORY_LABELS,
@@ -9,6 +10,11 @@ import {
   type CompanyFile,
   type FileCategory,
 } from '../api/companyFiles'
+import type { ApiResponse } from '../api/client'
+
+function errorMessage(err: unknown, fallback: string): string {
+  return (isAxiosError<ApiResponse<unknown>>(err) ? err.response?.data?.message : null) || fallback
+}
 
 const CATEGORIES: FileCategory[] = ['DOMAIN_INTRO', 'EVIDENCE', 'CERTIFICATE', 'FINANCE', 'ETC']
 
@@ -24,32 +30,41 @@ export default function CompanyFilesPage() {
   const [activeCategory, setActiveCategory] = useState<FileCategory | undefined>(undefined)
   const [files, setFiles] = useState<CompanyFile[]>([])
   const [isUploading, setIsUploading] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function refresh() {
     setFiles(await listCompanyFiles(activeCategory))
   }
 
   useEffect(() => {
-    refresh()
+    refresh().catch((err) => setError(errorMessage(err, '목록을 불러오는 중 오류가 발생했습니다.')))
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [activeCategory])
 
   async function handleFilesSelected(selected: File[]) {
     if (!activeCategory) return
     setIsUploading(true)
+    setError(null)
     try {
       for (const file of selected) {
         await uploadCompanyFile(file, activeCategory)
       }
       await refresh()
+    } catch (err) {
+      setError(errorMessage(err, '업로드 중 오류가 발생했습니다.'))
     } finally {
       setIsUploading(false)
     }
   }
 
   async function handleDelete(id: number) {
-    await deleteCompanyFile(id)
-    await refresh()
+    setError(null)
+    try {
+      await deleteCompanyFile(id)
+      await refresh()
+    } catch (err) {
+      setError(errorMessage(err, '삭제 중 오류가 발생했습니다.'))
+    }
   }
 
   return (
@@ -102,6 +117,7 @@ export default function CompanyFilesPage() {
               업로드하려면 왼쪽에서 카테고리를 먼저 선택하세요.
             </p>
           )}
+          {error && <p className="mt-3 text-xs text-pending">{error}</p>}
 
           <table className="mt-8 w-full text-left text-sm">
             <thead className="text-xs uppercase tracking-wide text-muted">

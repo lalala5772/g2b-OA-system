@@ -128,6 +128,9 @@ public class BidServiceImpl implements BidService {
 		if (bidKeywordRepository.count() >= MAX_KEYWORDS) {
 			throw new IllegalArgumentException("키워드는 최대 " + MAX_KEYWORDS + "개까지 등록할 수 있습니다.");
 		}
+		if (bidKeywordRepository.existsByKeyword(keyword)) {
+			throw new IllegalArgumentException("이미 등록된 키워드입니다: " + keyword);
+		}
 		return BidKeywordResponse.from(bidKeywordRepository.save(new BidKeyword(keyword)));
 	}
 

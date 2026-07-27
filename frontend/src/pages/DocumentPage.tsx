@@ -1,16 +1,23 @@
 import { useState } from 'react'
+import { isAxiosError } from 'axios'
 import { autoFillDocument, downloadUrl, type DocumentAutoFillResult } from '../api/documents'
+import type { ApiResponse } from '../api/client'
 
 export default function DocumentPage() {
   const [file, setFile] = useState<File | null>(null)
   const [result, setResult] = useState<DocumentAutoFillResult | null>(null)
   const [isFilling, setIsFilling] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   async function handleAutoFill() {
     if (!file) return
     setIsFilling(true)
+    setError(null)
     try {
       setResult(await autoFillDocument(file))
+    } catch (err) {
+      const serverMessage = isAxiosError<ApiResponse<unknown>>(err) ? err.response?.data?.message : null
+      setError(serverMessage || '자동 채우기 중 오류가 발생했습니다.')
     } finally {
       setIsFilling(false)
     }
@@ -50,6 +57,7 @@ export default function DocumentPage() {
           >
             {isFilling ? '채우는 중…' : '자동 채우기 실행'}
           </button>
+          {error && <p className="mt-3 text-xs text-pending">{error}</p>}
         </section>
 
         <section className="rounded-lg border border-hairline bg-navy-900 p-6">

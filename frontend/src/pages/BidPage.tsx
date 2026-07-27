@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { isAxiosError } from 'axios'
 import { Link } from 'react-router-dom'
 import {
   MAX_KEYWORDS,
@@ -11,6 +12,11 @@ import {
   type BidNotice,
   type BidScanSummary,
 } from '../api/bids'
+import type { ApiResponse } from '../api/client'
+
+function errorMessage(err: unknown, fallback: string): string {
+  return (isAxiosError<ApiResponse<unknown>>(err) ? err.response?.data?.message : null) || fallback
+}
 
 const STATUS_LABELS: Record<BidNotice['status'], string> = {
   ELIGIBLE: '적격',
@@ -25,6 +31,7 @@ export default function BidPage() {
   const [endDate, setEndDate] = useState('')
   const [isScanning, setIsScanning] = useState(false)
   const [summary, setSummary] = useState<BidScanSummary | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   async function refresh() {
     const [keywordList, noticeList] = await Promise.all([listKeywords(), fetchRecentEligible()])
@@ -38,21 +45,34 @@ export default function BidPage() {
 
   async function handleAddKeyword() {
     if (!newKeyword.trim() || keywords.length >= MAX_KEYWORDS) return
-    await addKeyword(newKeyword.trim())
-    setNewKeyword('')
-    await refresh()
+    setError(null)
+    try {
+      await addKeyword(newKeyword.trim())
+      setNewKeyword('')
+      await refresh()
+    } catch (err) {
+      setError(errorMessage(err, '키워드 추가 중 오류가 발생했습니다.'))
+    }
   }
 
   async function handleRemoveKeyword(id: number) {
-    await removeKeyword(id)
-    await refresh()
+    setError(null)
+    try {
+      await removeKeyword(id)
+      await refresh()
+    } catch (err) {
+      setError(errorMessage(err, '키워드 삭제 중 오류가 발생했습니다.'))
+    }
   }
 
   async function handleScanNow() {
     setIsScanning(true)
+    setError(null)
     try {
       setSummary(await scanNow(startDate || undefined, endDate || undefined))
       await refresh()
+    } catch (err) {
+      setError(errorMessage(err, '스캔 중 오류가 발생했습니다.'))
     } finally {
       setIsScanning(false)
     }
@@ -105,6 +125,7 @@ export default function BidPage() {
             ))}
             {keywords.length === 0 && <li className="text-xs text-muted">등록된 키워드가 없습니다.</li>}
           </ul>
+          {error && <p className="mt-3 text-xs text-pending">{error}</p>}
 
           <h2 className="mt-8 text-sm font-semibold text-offwhite">조회 기간</h2>
           <p className="mt-1 text-xs text-muted">비워두면 최근 7일을 조회합니다.</p>

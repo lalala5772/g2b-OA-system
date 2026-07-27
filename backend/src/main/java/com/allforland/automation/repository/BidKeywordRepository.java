@@ -7,4 +7,6 @@ import org.springframework.data.jpa.repository.JpaRepository;
 public interface BidKeywordRepository extends JpaRepository<BidKeyword, Long> {
 
 	List<BidKeyword> findAllByActiveTrue();
+
+	boolean existsByKeyword(String keyword);
 }
