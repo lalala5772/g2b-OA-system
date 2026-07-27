@@ -10,10 +10,11 @@ public class CookieUtil {
 	private CookieUtil() {
 	}
 
-	public static void setAccessTokenCookie(HttpServletResponse response, String token, long maxAgeSeconds) {
+	public static void setAccessTokenCookie(
+			HttpServletResponse response, String token, long maxAgeSeconds, boolean secure) {
 		ResponseCookie cookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, token)
 				.httpOnly(true)
-				.secure(true)
+				.secure(secure)
 				.sameSite("Lax")
 				.path("/")
 				.maxAge(maxAgeSeconds)
@@ -21,10 +22,10 @@ public class CookieUtil {
 		response.addHeader("Set-Cookie", cookie.toString());
 	}
 
-	public static void clearAccessTokenCookie(HttpServletResponse response) {
+	public static void clearAccessTokenCookie(HttpServletResponse response, boolean secure) {
 		ResponseCookie cookie = ResponseCookie.from(ACCESS_TOKEN_COOKIE, "")
 				.httpOnly(true)
-				.secure(true)
+				.secure(secure)
 				.sameSite("Lax")
 				.path("/")
 				.maxAge(0)

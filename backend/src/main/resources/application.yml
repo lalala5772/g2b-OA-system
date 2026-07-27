@@ -1,5 +1,6 @@
 server:
   port: 8080
+  forward-headers-strategy: framework
 
 spring:
   application:
@@ -33,6 +34,7 @@ app:
   jwt:
     secret: ${JWT_SECRET:local-dev-only-secret-please-override-CHANGE-ME-32bytes}
     expiration-minutes: ${JWT_EXPIRATION_MINUTES:720}
+    cookie-secure: ${JWT_COOKIE_SECURE:true}
   file-storage:
     base-dir: ${FILE_STORAGE_BASE_DIR:./data/company-files}
   bid:

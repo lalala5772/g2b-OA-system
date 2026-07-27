@@ -28,7 +28,7 @@ export default function LoginPage() {
         자동화 시스템
       </h1>
 
-      <p className="relative mt-8 text-xl text-accent md:text-2xl">미르컴퍼니 인트라넷 프로그램</p>
+      <p className="relative mt-8 text-xl text-accent md:text-2xl">(주)메타지오스파셜 인트라넷 프로그램</p>
 
       <p className="relative mt-6 max-w-md text-sm leading-relaxed text-muted">
         나라장터 공고 적격탐지부터 문서 작성, 증빙자료 정리까지

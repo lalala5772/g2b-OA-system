@@ -19,14 +19,17 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 	private final UserService userService;
 	private final JwtTokenProvider jwtTokenProvider;
 	private final String frontendUrl;
+	private final boolean cookieSecure;
 
 	public OAuth2LoginSuccessHandler(
 			UserService userService,
 			JwtTokenProvider jwtTokenProvider,
-			@Value("${app.frontend-url}") String frontendUrl) {
+			@Value("${app.frontend-url}") String frontendUrl,
+			@Value("${app.jwt.cookie-secure}") boolean cookieSecure) {
 		this.userService = userService;
 		this.jwtTokenProvider = jwtTokenProvider;
 		this.frontendUrl = frontendUrl;
+		this.cookieSecure = cookieSecure;
 	}
 
 	@Override
@@ -41,7 +44,7 @@ public class OAuth2LoginSuccessHandler implements AuthenticationSuccessHandler {
 
 		User user = userService.findOrCreateByGoogle(googleId, email, name, picture);
 		String token = jwtTokenProvider.generateToken(user.getId(), user.getEmail(), user.getRole());
-		CookieUtil.setAccessTokenCookie(response, token, jwtTokenProvider.expirationSeconds());
+		CookieUtil.setAccessTokenCookie(response, token, jwtTokenProvider.expirationSeconds(), cookieSecure);
 
 		response.sendRedirect(frontendUrl + "/dashboard");
 	}
