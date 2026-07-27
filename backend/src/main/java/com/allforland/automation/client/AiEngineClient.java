@@ -6,6 +6,8 @@ import java.time.LocalDate;
 import java.util.Base64;
 import java.util.List;
 import java.util.Map;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.core.io.ByteArrayResource;
 import org.springframework.core.ParameterizedTypeReference;
@@ -16,6 +18,8 @@ import org.springframework.web.reactive.function.client.WebClient;
 
 @Component
 public class AiEngineClient {
+
+	private static final Logger log = LoggerFactory.getLogger(AiEngineClient.class);
 
 	private final WebClient webClient;
 	private final Duration timeout;
@@ -67,6 +71,7 @@ public class AiEngineClient {
 					response.judged(),
 					response.unjudged());
 		} catch (Exception ex) {
+			log.error("ai-engine 나라장터 스캔 호출 실패 (startDate={}, endDate={})", startDate, endDate, ex);
 			return BidScanOutcome.empty(startDate, endDate);
 		}
 	}
@@ -113,6 +118,7 @@ public class AiEngineClient {
 			return new AutoFillOutcome(
 					Base64.getDecoder().decode(response.filledDocumentBase64()), response.filledFields());
 		} catch (Exception ex) {
+			log.error("ai-engine 문서 자동채움 호출 실패 (filename={})", filename, ex);
 			return new AutoFillOutcome(null, Map.of());
 		}
 	}
@@ -137,6 +143,7 @@ public class AiEngineClient {
 					.block();
 			return response == null ? List.of() : response.items();
 		} catch (Exception ex) {
+			log.error("ai-engine 제출서류 추출 호출 실패", ex);
 			return List.of();
 		}
 	}
@@ -165,6 +172,7 @@ public class AiEngineClient {
 					.block();
 			return response == null ? List.of() : response.matches();
 		} catch (Exception ex) {
+			log.error("ai-engine 증빙 매칭 호출 실패 (itemCount={}, fileCount={})", items.size(), evidenceFiles.size(), ex);
 			return List.of();
 		}
 	}
@@ -209,6 +217,7 @@ public class AiEngineClient {
 			return new FileParseResult(
 					"success".equals(response.status()), response.extractedText(), response.message());
 		} catch (Exception ex) {
+			log.error("ai-engine 파일 파싱 호출 실패 (filename={})", filename, ex);
 			return new FileParseResult(false, null, "AI 엔진 호출에 실패했습니다: " + ex.getMessage());
 		}
 	}

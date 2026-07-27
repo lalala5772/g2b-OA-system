@@ -5,7 +5,6 @@ import com.allforland.automation.client.AiEngineClient.EvidenceFileCandidate;
 import com.allforland.automation.client.AiEngineClient.EvidenceItemMatch;
 import com.allforland.automation.client.AiEngineClient.RequiredItemSuggestion;
 import com.allforland.automation.domain.CompanyFile;
-import com.allforland.automation.domain.FileCategory;
 import com.allforland.automation.domain.RequiredItem;
 import com.allforland.automation.domain.RequirementSet;
 import com.allforland.automation.domain.UploadedFile;
@@ -92,9 +91,10 @@ public class EvidenceServiceImpl implements EvidenceService {
 			return new EvidenceAnalysisResponse(requirementSet.getId(), requirementSet.getStatus(), List.of(), null, 0, 0);
 		}
 
-		List<CompanyFile> evidenceFiles = companyFileRepository
-				.findAllByCategoryOrderByUploadedAtDesc(FileCategory.EVIDENCE)
-				.stream()
+		// 카테고리는 자료실 화면에서 사람이 분류해 보기 위한 것일 뿐, 어떤 카테고리로 올렸든 회사가
+		// 보유한 파일이면 증빙 후보가 될 수 있어야 한다 — EVIDENCE로만 좁히면 재무제표(FINANCE)나
+		// 인증서(CERTIFICATE)로 분류한 파일이 실제 요구서류와 일치해도 후보에 아예 오르지 못한다.
+		List<CompanyFile> evidenceFiles = companyFileRepository.findAllByOrderByUploadedAtDesc().stream()
 				.filter(file -> file.getExtractedText() != null)
 				.toList();
 

@@ -1,12 +1,21 @@
 import { useEffect, useState } from 'react'
+import { isAxiosError } from 'axios'
 import FeatureCard from '../components/FeatureCard'
 import { fetchDashboardSummary, type DashboardSummary } from '../api/dashboard'
+import type { ApiResponse } from '../api/client'
+
+function errorMessage(err: unknown, fallback: string): string {
+  return (isAxiosError<ApiResponse<unknown>>(err) ? err.response?.data?.message : null) || fallback
+}
 
 export default function DashboardPage() {
   const [summary, setSummary] = useState<DashboardSummary | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    fetchDashboardSummary().then(setSummary)
+    fetchDashboardSummary()
+      .then(setSummary)
+      .catch((err) => setError(errorMessage(err, '요약 정보를 불러오는 중 오류가 발생했습니다.')))
   }, [])
 
   return (
@@ -42,6 +51,7 @@ export default function DashboardPage() {
           회사 자료실에 {summary.totalCompanyFiles}건의 자료가 등록되어 있습니다.
         </p>
       )}
+      {error && <p className="mt-8 text-sm text-pending">{error}</p>}
     </div>
   )
 }

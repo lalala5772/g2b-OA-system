@@ -1,16 +1,29 @@
 import { useEffect, useState } from 'react'
+import { isAxiosError } from 'axios'
 import { Link, useParams } from 'react-router-dom'
 import { fetchBidDetail, type BidNotice } from '../api/bids'
+import type { ApiResponse } from '../api/client'
+
+function errorMessage(err: unknown, fallback: string): string {
+  return (isAxiosError<ApiResponse<unknown>>(err) ? err.response?.data?.message : null) || fallback
+}
 
 export default function BidDetailPage() {
   const { id } = useParams<{ id: string }>()
   const [notice, setNotice] = useState<BidNotice | null>(null)
+  const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
     if (id) {
-      fetchBidDetail(Number(id)).then(setNotice)
+      fetchBidDetail(Number(id))
+        .then(setNotice)
+        .catch((err) => setError(errorMessage(err, '공고를 불러오는 중 오류가 발생했습니다.')))
     }
   }, [id])
+
+  if (error) {
+    return <p className="text-sm text-pending">{error}</p>
+  }
 
   if (!notice) {
     return <p className="text-sm text-muted">불러오는 중…</p>
