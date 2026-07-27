@@ -48,9 +48,10 @@ export async function removeKeyword(id: number): Promise<void> {
   await apiClient.delete(`/api/bids/keywords/${id}`)
 }
 
-/** 최근 감지된 적격 공고 (최대 50건, 최신순) */
-export async function fetchRecentEligible(): Promise<BidNotice[]> {
-  const { data } = await apiClient.get<ApiResponse<BidNotice[]>>('/api/bids/eligible')
+/** 조회기간 내 적격 공고 (최대 50건, 최신순). 둘 다 비우면 서버 기본값(최근 7일) 사용 */
+export async function fetchRecentEligible(startDate?: string, endDate?: string): Promise<BidNotice[]> {
+  const params = startDate && endDate ? { startDate, endDate } : {}
+  const { data } = await apiClient.get<ApiResponse<BidNotice[]>>('/api/bids/eligible', { params })
   return data.data
 }
 

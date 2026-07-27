@@ -51,6 +51,7 @@ public class BidServiceImpl implements BidService {
 	@Override
 	@Transactional
 	public BidScanSummaryResponse triggerScan(LocalDate startDate, LocalDate endDate) {
+		validateRange(startDate, endDate);
 		List<String> keywords = bidKeywordRepository.findAllByActiveTrue().stream()
 				.map(BidKeyword::getKeyword)
 				.toList();
@@ -101,10 +102,34 @@ public class BidServiceImpl implements BidService {
 
 	@Override
 	@Transactional(readOnly = true)
-	public List<BidNoticeResponse> recentEligible() {
-		return bidNoticeRepository.findTop50ByStatusOrderByCrawledAtDesc(BidNoticeStatus.ELIGIBLE).stream()
+	public List<BidNoticeResponse> recentEligible(LocalDate startDate, LocalDate endDate) {
+		validateRange(startDate, endDate);
+		LocalDate[] range = resolveRange(startDate, endDate);
+		return bidNoticeRepository
+				.findTop50ByStatusAndAnnounceDateBetweenOrderByCrawledAtDesc(
+						BidNoticeStatus.ELIGIBLE, range[0], range[1])
+				.stream()
 				.map(BidNoticeResponse::from)
 				.toList();
+	}
+
+	/** startDate/endDate가 둘 다 비어있으면 안 되고, 둘 중 하나만 비어있어도 안 됨 — 시작일은 종료일보다 늦을 수 없음. */
+	private void validateRange(LocalDate startDate, LocalDate endDate) {
+		if ((startDate == null) != (endDate == null)) {
+			throw new IllegalArgumentException("조회 시작일과 종료일을 모두 입력하거나, 모두 비워주세요.");
+		}
+		if (startDate != null && startDate.isAfter(endDate)) {
+			throw new IllegalArgumentException("조회 시작일은 종료일보다 늦을 수 없습니다.");
+		}
+	}
+
+	/** ai-engine의 기본 조회기간(최근 7일)과 동일한 기본값을 사용해, 스캔과 적격목록 조회가 같은 범위를 바라보게 함. */
+	private LocalDate[] resolveRange(LocalDate startDate, LocalDate endDate) {
+		if (startDate == null) {
+			LocalDate today = LocalDate.now();
+			return new LocalDate[] {today.minusDays(7), today};
+		}
+		return new LocalDate[] {startDate, endDate};
 	}
 
 	@Override

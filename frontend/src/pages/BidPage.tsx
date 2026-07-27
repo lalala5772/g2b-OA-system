@@ -33,10 +33,23 @@ export default function BidPage() {
   const [summary, setSummary] = useState<BidScanSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
 
-  async function refresh() {
-    const [keywordList, noticeList] = await Promise.all([listKeywords(), fetchRecentEligible()])
+  async function refresh(rangeStart = startDate, rangeEnd = endDate) {
+    const [keywordList, noticeList] = await Promise.all([
+      listKeywords(),
+      fetchRecentEligible(rangeStart || undefined, rangeEnd || undefined),
+    ])
     setKeywords(keywordList)
     setNotices(noticeList)
+  }
+
+  function validateRange(): string | null {
+    if (Boolean(startDate) !== Boolean(endDate)) {
+      return '조회 시작일과 종료일을 모두 입력하거나, 모두 비워주세요.'
+    }
+    if (startDate && endDate && startDate > endDate) {
+      return '조회 시작일은 종료일보다 늦을 수 없습니다.'
+    }
+    return null
   }
 
   useEffect(() => {
@@ -66,6 +79,11 @@ export default function BidPage() {
   }
 
   async function handleScanNow() {
+    const validationError = validateRange()
+    if (validationError) {
+      setError(validationError)
+      return
+    }
     setIsScanning(true)
     setError(null)
     try {
