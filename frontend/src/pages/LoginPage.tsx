@@ -19,19 +19,19 @@ export default function LoginPage() {
       </span>
 
       <p className="relative text-xs font-medium tracking-[0.4em] text-muted">
-        국내 정부 조달 · 공고 자동화 플랫폼
+        OA Program
       </p>
 
       <h1 className="relative mt-6 text-5xl font-semibold leading-[1.15] tracking-tight text-offwhite md:text-7xl">
-        업무를 연결하고,
+        업무
         <br />
-        자동화하는 시스템
+        자동화 시스템
       </h1>
 
-      <p className="relative mt-8 text-xl text-accent md:text-2xl">— 나라장터 · 문서 · 증빙</p>
+      <p className="relative mt-8 text-xl text-accent md:text-2xl">미르컴퍼니 인트라넷 프로그램</p>
 
       <p className="relative mt-6 max-w-md text-sm leading-relaxed text-muted">
-        나라장터 공고 탐지부터 문서 작성, 증빙자료 정리까지
+        나라장터 공고 적격탐지부터 문서 작성, 증빙자료 정리까지
         <br />한 곳에서 관리합니다.
       </p>
 

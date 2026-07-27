@@ -2,10 +2,16 @@ package com.allforland.automation.controller;
 
 import com.allforland.automation.common.ApiResponse;
 import com.allforland.automation.common.AuthenticatedPrincipal;
+import com.allforland.automation.common.FileDownload;
 import com.allforland.automation.domain.FileCategory;
 import com.allforland.automation.dto.CompanyFileResponse;
 import com.allforland.automation.service.CompanyFileService;
+import java.nio.charset.StandardCharsets;
 import java.util.List;
+import org.springframework.http.ContentDisposition;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.DeleteMapping;
 import org.springframework.web.bind.annotation.GetMapping;
@@ -39,6 +45,20 @@ public class CompanyFileController {
 	public ApiResponse<List<CompanyFileResponse>> list(
 			@RequestParam(value = "category", required = false) FileCategory category) {
 		return ApiResponse.ok(companyFileService.list(category));
+	}
+
+	@GetMapping("/{id}/download")
+	public ResponseEntity<byte[]> download(@PathVariable Long id) {
+		FileDownload download = companyFileService.download(id);
+		return ResponseEntity.ok()
+				.contentType(MediaType.parseMediaType(download.contentType()))
+				.header(
+						HttpHeaders.CONTENT_DISPOSITION,
+						ContentDisposition.attachment()
+								.filename(download.fileName(), StandardCharsets.UTF_8)
+								.build()
+								.toString())
+				.body(download.content());
 	}
 
 	@DeleteMapping("/{id}")

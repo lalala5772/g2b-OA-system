@@ -1,6 +1,6 @@
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { NavLink, Outlet, useNavigate } from 'react-router-dom'
-import { fetchCurrentUser, logout, type CurrentUser } from '../api/auth'
+import { useAuthStore } from '../store/authStore'
 
 const NAV_ITEMS = [
   { to: '/documents', label: '문서' },
@@ -10,23 +10,22 @@ const NAV_ITEMS = [
 ]
 
 export default function Layout() {
-  const [user, setUser] = useState<CurrentUser | null | undefined>(undefined)
+  const user = useAuthStore((state) => state.user)
+  const fetchUser = useAuthStore((state) => state.fetchUser)
+  const logout = useAuthStore((state) => state.logout)
   const navigate = useNavigate()
 
   useEffect(() => {
-    fetchCurrentUser().then(setUser)
-  }, [])
+    if (user === undefined) {
+      fetchUser()
+    }
+  }, [user, fetchUser])
 
   useEffect(() => {
     if (user === null) {
       navigate('/', { replace: true })
     }
   }, [user, navigate])
-
-  async function handleLogout() {
-    await logout()
-    setUser(null)
-  }
 
   return (
     <div className="min-h-screen bg-navy-950 text-offwhite">
@@ -56,7 +55,7 @@ export default function Layout() {
                 )}
                 <span>{user.name}</span>
                 <span className="text-hairline">/</span>
-                <button onClick={handleLogout} className="transition-colors hover:text-offwhite">
+                <button onClick={logout} className="transition-colors hover:text-offwhite">
                   로그아웃
                 </button>
               </>

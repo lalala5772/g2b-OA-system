@@ -2,6 +2,8 @@ package com.allforland.automation.service.impl;
 
 import com.allforland.automation.client.AiEngineClient;
 import com.allforland.automation.client.FileParseResult;
+import com.allforland.automation.common.FileDownload;
+import com.allforland.automation.common.MimeTypes;
 import com.allforland.automation.domain.CompanyFile;
 import com.allforland.automation.domain.FileCategory;
 import com.allforland.automation.domain.User;
@@ -95,6 +97,15 @@ public class CompanyFileServiceImpl implements CompanyFileService {
 				? companyFileRepository.findAllByOrderByUploadedAtDesc()
 				: companyFileRepository.findAllByCategoryOrderByUploadedAtDesc(category);
 		return files.stream().map(CompanyFileResponse::from).toList();
+	}
+
+	@Override
+	@Transactional(readOnly = true)
+	public FileDownload download(Long id) {
+		CompanyFile file = companyFileRepository.findById(id)
+				.orElseThrow(() -> new IllegalArgumentException("자료를 찾을 수 없습니다: " + id));
+		byte[] content = fileStorageService.load(file.getStorageKey());
+		return new FileDownload(content, file.getFileName(), MimeTypes.byExtension(file.getFileType()));
 	}
 
 	@Override

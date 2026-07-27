@@ -4,9 +4,15 @@ interface FileUploaderProps {
   onFilesSelected: (files: File[]) => void
   accept?: string
   multiple?: boolean
+  hint?: string
 }
 
-export default function FileUploader({ onFilesSelected, accept, multiple = true }: FileUploaderProps) {
+export default function FileUploader({
+  onFilesSelected,
+  accept,
+  multiple = true,
+  hint = 'docx · pdf · hwp',
+}: FileUploaderProps) {
   const [isDragging, setIsDragging] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
@@ -32,7 +38,7 @@ export default function FileUploader({ onFilesSelected, accept, multiple = true 
       }`}
     >
       <p className="text-sm text-offwhite">파일을 드래그하거나 클릭하여 업로드</p>
-      <p className="mt-2 text-xs text-muted">docx · pdf · hwp</p>
+      <p className="mt-2 text-xs text-muted">{hint}</p>
       <input
         ref={inputRef}
         type="file"

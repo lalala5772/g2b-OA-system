@@ -42,3 +42,8 @@ export async function uploadCompanyFile(file: File, category: FileCategory): Pro
 export async function deleteCompanyFile(id: number): Promise<void> {
   await apiClient.delete(`/api/company-files/${id}`)
 }
+
+export function companyFileDownloadUrl(id: number): string {
+  const base = import.meta.env.VITE_API_BASE_URL ?? 'http://localhost:8080'
+  return `${base}/api/company-files/${id}/download`
+}

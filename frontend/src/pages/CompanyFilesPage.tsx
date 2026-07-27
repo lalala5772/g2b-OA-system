@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react'
 import FileUploader from '../components/FileUploader'
 import {
   CATEGORY_LABELS,
+  companyFileDownloadUrl,
   deleteCompanyFile,
   listCompanyFiles,
   uploadCompanyFile,
@@ -87,7 +88,11 @@ export default function CompanyFilesPage() {
                 {isUploading && <span className="text-xs text-muted">업로드 중…</span>}
               </div>
               <div className="mt-4">
-                <FileUploader onFilesSelected={handleFilesSelected} accept=".docx,.pdf,.hwp,.hwpx" />
+                <FileUploader
+                  onFilesSelected={handleFilesSelected}
+                  accept=".docx,.doc,.pdf,.hwp,.hwpx,.xlsx,.xls"
+                  hint="docx · doc · pdf · hwp · hwpx · xlsx"
+                />
               </div>
             </>
           ) : (
@@ -109,7 +114,14 @@ export default function CompanyFilesPage() {
             <tbody>
               {files.map((file) => (
                 <tr key={file.id} className="border-b border-hairline/60">
-                  <td className="py-3 text-offwhite">{file.fileName}</td>
+                  <td className="py-3">
+                    <a
+                      href={companyFileDownloadUrl(file.id)}
+                      className="text-offwhite transition-colors hover:text-accent hover:underline"
+                    >
+                      {file.fileName}
+                    </a>
+                  </td>
                   <td className="py-3 text-muted">{CATEGORY_LABELS[file.category]}</td>
                   <td className="py-3 text-muted">
                     {new Date(file.uploadedAt).toLocaleDateString('ko-KR')}
