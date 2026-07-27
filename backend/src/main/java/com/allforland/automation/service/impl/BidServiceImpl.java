@@ -104,10 +104,19 @@ public class BidServiceImpl implements BidService {
 	@Transactional(readOnly = true)
 	public List<BidNoticeResponse> recentEligible(LocalDate startDate, LocalDate endDate) {
 		validateRange(startDate, endDate);
+
+		// 키워드를 삭제하면 그 키워드로 찾았던 예전 적격 공고도 더 이상 "지금의 관심사"가 아니므로
+		// 함께 사라져야 한다 — matchedKeyword가 현재 활성 키워드 목록에 없으면 후보에서 제외.
+		List<String> activeKeywords =
+				bidKeywordRepository.findAllByActiveTrue().stream().map(BidKeyword::getKeyword).toList();
+		if (activeKeywords.isEmpty()) {
+			return List.of();
+		}
+
 		LocalDate[] range = resolveRange(startDate, endDate);
 		return bidNoticeRepository
-				.findTop50ByStatusAndAnnounceDateBetweenOrderByCrawledAtDesc(
-						BidNoticeStatus.ELIGIBLE, range[0], range[1])
+				.findTop50ByStatusAndAnnounceDateBetweenAndMatchedKeywordInOrderByCrawledAtDesc(
+						BidNoticeStatus.ELIGIBLE, range[0], range[1], activeKeywords)
 				.stream()
 				.map(BidNoticeResponse::from)
 				.toList();
