@@ -31,6 +31,10 @@ export default function BidPage() {
   const [endDate, setEndDate] = useState('')
   const [isScanning, setIsScanning] = useState(false)
   const [isAddingKeyword, setIsAddingKeyword] = useState(false)
+  // 페이지를 새로 열 때마다 "지금 스캔 실행"을 눌러야만 적격 공고를 보여준다 — 예전 스캔
+  // 결과(자동 스캔 포함)가 사용자 액션 없이 뜨는 게 "왜 벌써 결과가 있지?"라는 혼란을 줬음.
+  // 데이터는 그대로 두고 화면 표시만 이 세션의 스캔 실행 여부로 게이트한다.
+  const [hasScanned, setHasScanned] = useState(false)
   const [summary, setSummary] = useState<BidScanSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -93,6 +97,7 @@ export default function BidPage() {
     try {
       setSummary(await scanNow(startDate || undefined, endDate || undefined))
       await refresh()
+      setHasScanned(true)
     } catch (err) {
       setError(errorMessage(err, '스캔 중 오류가 발생했습니다.'))
     } finally {
@@ -193,24 +198,32 @@ export default function BidPage() {
         <section className="rounded-lg border border-hairline bg-navy-900 p-6">
           <h2 className="text-sm font-semibold text-offwhite">적격 공고</h2>
           <div className="mt-4 space-y-3">
-            {notices.map((notice) => (
-              <Link
-                key={notice.id}
-                to={`/bids/${notice.id}`}
-                className="btn-premium block rounded border border-hairline/60 p-4 hover:border-accent"
-              >
-                <div className="flex items-start justify-between gap-4">
-                  <span className="text-sm text-offwhite">{notice.title}</span>
-                  <span className="shrink-0 text-xs text-muted">{STATUS_LABELS[notice.status]}</span>
-                </div>
-                <p className="mt-1 text-xs text-muted">
-                  {notice.agency} · 키워드: {notice.matchedKeyword} · 마감: {notice.deadline ?? '미상'}
-                  {notice.eligibilityScore != null && ` · 적격점수 ${notice.eligibilityScore.toFixed(2)}`}
-                </p>
-                {notice.aiSummary && <p className="mt-2 line-clamp-2 text-xs text-muted">{notice.aiSummary}</p>}
-              </Link>
-            ))}
-            {notices.length === 0 && <p className="text-sm text-muted">아직 감지된 적격 공고가 없습니다.</p>}
+            {!hasScanned && (
+              <p className="text-sm text-muted">
+                키워드를 등록하고 "지금 스캔 실행"을 눌러 공고를 조회해보세요.
+              </p>
+            )}
+            {hasScanned &&
+              notices.map((notice) => (
+                <Link
+                  key={notice.id}
+                  to={`/bids/${notice.id}`}
+                  className="btn-premium block rounded border border-hairline/60 p-4 hover:border-accent"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <span className="text-sm text-offwhite">{notice.title}</span>
+                    <span className="shrink-0 text-xs text-muted">{STATUS_LABELS[notice.status]}</span>
+                  </div>
+                  <p className="mt-1 text-xs text-muted">
+                    {notice.agency} · 키워드: {notice.matchedKeyword} · 마감: {notice.deadline ?? '미상'}
+                    {notice.eligibilityScore != null && ` · 적격점수 ${notice.eligibilityScore.toFixed(2)}`}
+                  </p>
+                  {notice.aiSummary && <p className="mt-2 line-clamp-2 text-xs text-muted">{notice.aiSummary}</p>}
+                </Link>
+              ))}
+            {hasScanned && notices.length === 0 && (
+              <p className="text-sm text-muted">아직 감지된 적격 공고가 없습니다.</p>
+            )}
           </div>
         </section>
       </div>
