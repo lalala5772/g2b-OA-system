@@ -30,6 +30,7 @@ export default function BidPage() {
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [isScanning, setIsScanning] = useState(false)
+  const [isAddingKeyword, setIsAddingKeyword] = useState(false)
   const [summary, setSummary] = useState<BidScanSummary | null>(null)
   const [error, setError] = useState<string | null>(null)
 
@@ -57,7 +58,8 @@ export default function BidPage() {
   }, [])
 
   async function handleAddKeyword() {
-    if (!newKeyword.trim() || keywords.length >= MAX_KEYWORDS) return
+    if (!newKeyword.trim() || keywords.length >= MAX_KEYWORDS || isAddingKeyword) return
+    setIsAddingKeyword(true)
     setError(null)
     try {
       await addKeyword(newKeyword.trim())
@@ -65,6 +67,8 @@ export default function BidPage() {
       await refresh()
     } catch (err) {
       setError(errorMessage(err, '키워드 추가 중 오류가 발생했습니다.'))
+    } finally {
+      setIsAddingKeyword(false)
     }
   }
 
@@ -118,12 +122,12 @@ export default function BidPage() {
               onChange={(e) => setNewKeyword(e.target.value)}
               onKeyDown={(e) => e.key === 'Enter' && handleAddKeyword()}
               placeholder="예: 공간정보"
-              disabled={keywords.length >= MAX_KEYWORDS}
+              disabled={keywords.length >= MAX_KEYWORDS || isAddingKeyword}
               className="w-full rounded border border-hairline bg-navy-950 px-3 py-2 text-sm text-offwhite disabled:opacity-50"
             />
             <button
               onClick={handleAddKeyword}
-              disabled={keywords.length >= MAX_KEYWORDS}
+              disabled={keywords.length >= MAX_KEYWORDS || isAddingKeyword}
               className="shrink-0 rounded border border-hairline px-3 py-2 text-sm text-offwhite hover:border-accent disabled:opacity-50"
             >
               추가

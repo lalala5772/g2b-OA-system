@@ -20,6 +20,7 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.stream.Collectors;
 import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -165,7 +166,14 @@ public class BidServiceImpl implements BidService {
 		if (bidKeywordRepository.existsByKeyword(keyword)) {
 			throw new IllegalArgumentException("이미 등록된 키워드입니다: " + keyword);
 		}
-		return BidKeywordResponse.from(bidKeywordRepository.save(new BidKeyword(keyword)));
+		// 사전 체크와 저장 사이엔 시간차가 있어, 같은 키워드를 거의 동시에 두 번 추가 요청하면
+		// (예: 반응이 없어 보여 버튼을 다시 누른 경우) 둘 다 체크를 통과한 뒤 하나만 저장되고
+		// 나머지 하나는 DB 유니크 제약에 걸릴 수 있다 — 그 경우도 같은 안내 메시지로 처리한다.
+		try {
+			return BidKeywordResponse.from(bidKeywordRepository.save(new BidKeyword(keyword)));
+		} catch (DataIntegrityViolationException e) {
+			throw new IllegalArgumentException("이미 등록된 키워드입니다: " + keyword);
+		}
 	}
 
 	@Override
